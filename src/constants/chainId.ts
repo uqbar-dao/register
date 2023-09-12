@@ -1,0 +1,6 @@
+export enum ChainId {
+  SEPOLIA = 11155111,
+  OPTIMISM = 10,
+  OPTIMISM_GOERLI = 420,
+  LOCAL = 1337,
+}

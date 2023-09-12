@@ -1,4 +1,5 @@
 import type { AddEthereumChainParameter } from '@web3-react/types'
+import { ChainId } from '../constants/chainId'
 
 const ETH: AddEthereumChainParameter['nativeCurrency'] = {
   name: 'Ether',
@@ -28,7 +29,7 @@ export function getAddChainParameters(chainId: number): AddEthereumChainParamete
 type ChainConfig = { [chainId: number]: ChainInformation }
 
 export const MAINNET_CHAINS: ChainConfig = {
-  10: {
+  [ChainId.OPTIMISM]: {
     urls: [''].filter(Boolean), // TODO uhhhh
     name: 'Optimism',
     nativeCurrency: ETH,
@@ -37,13 +38,13 @@ export const MAINNET_CHAINS: ChainConfig = {
 }
 
 export const TESTNET_CHAINS: ChainConfig = {
-  420: {
+  [ChainId.OPTIMISM_GOERLI]: {
     urls: ['https://goerli.optimism.io'],
     name: 'Optimism Goerli',
     nativeCurrency: ETH,
     blockExplorerUrls: ['https://goerli-explorer.optimism.io'],
   },
-  31337: {
+  [ChainId.LOCAL]: {
     urls: ['http://localhost:8545'],
     name: 'Localhost 8545',
     nativeCurrency: ETH,
