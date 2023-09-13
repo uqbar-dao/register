@@ -1,7 +1,12 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { hooks } from "../connectors/metamask";
-import { QNSRegistry__factory } from "../abis/types";
-import { QNS_REGISTRY_ADDRESSES, PUBLIC_RESOLVER_ADDRESSES } from "../constants/addresses";
+import { FIFSRegistrar__factory } from "../abis/types";
+import {
+  QNS_REGISTRY_ADDRESSES,
+  PUBLIC_RESOLVER_ADDRESSES,
+  FIFS_REGISTRAR_ADDRESSES } from "../constants/addresses";
+import { BigNumber } from "ethers";
+import { toDNSWireFormat } from "../utils/dnsWire";
 
 const {
   useChainId,
@@ -14,25 +19,51 @@ function ClaimUqName() {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
+  let [name, setName] = useState('foo');
 
-  if (!chainId) return <></>
-  if (!provider) return <></>
-  if (!(chainId in QNS_REGISTRY_ADDRESSES)) return <></>
-  if (!(chainId in PUBLIC_RESOLVER_ADDRESSES)) return <></>
-  let qnsRegistryAddress = QNS_REGISTRY_ADDRESSES[chainId];
+  if (!chainId) return <p>connect your wallet</p>
+  if (!provider) return <p>idk whats wrong</p>
+  if (!(chainId in QNS_REGISTRY_ADDRESSES)) return <p>change networks</p>
+  if (!(chainId in PUBLIC_RESOLVER_ADDRESSES)) return <p>change networks</p>
+  if (!(chainId in FIFS_REGISTRAR_ADDRESSES)) return <p>change networks</p>
+  let fifsRegistrarAddress = FIFS_REGISTRAR_ADDRESSES[chainId];
   let publicResolverAddress = PUBLIC_RESOLVER_ADDRESSES[chainId!];
-  let qnsRegistry = QNSRegistry__factory.connect(qnsRegistryAddress, provider.getSigner());
+  let fifsRegistrar = FIFSRegistrar__factory.connect(fifsRegistrarAddress, provider.getSigner());
 
   return (
-    <div>
+    <div id="signup-form" className="col">
+      <div className="row">
+        <h4>Set up your Uqbar node with a .uq name</h4>
+        <div className="tooltip-container">
+          <div className="tooltip-button">&#8505;</div>
+          <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+        </div>
+      </div>
+      <div className="row" style={{margin: "0 0 1em"}}>
+          <div style={{fontSize: "0.75em"}}>Address:</div>
+          {accounts && <div id="current-address">{accounts[0]}</div>}
+        </div>
+      <div className="row">
+        <input
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          type="text"
+          required
+          name="uq-name"
+          placeholder="e.g. myname"
+        />
+        <div className="uq">.uq</div>
+      </div>
       <button
         onClick={
           async () => {
-            const tx = await qnsRegistry.setSubnodeRecord(
-              "0x046d656d6502757100",
+            const dnsFormat = toDNSWireFormat(`${name}.uq`);
+            console.log('DNSWIRE', dnsFormat)
+            const tx = await fifsRegistrar.register(
+              dnsFormat,
               accounts![0],
               publicResolverAddress,
-              69000,
+              BigNumber.from("1844674407709551615"), // TODO this will change
             )
             await tx.wait();
             console.log('adsf', tx)
