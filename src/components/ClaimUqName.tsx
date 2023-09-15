@@ -14,8 +14,12 @@ const {
   useProvider,
 } = hooks;
 
+type ClaimUqNameProps = {
+  setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
+}
 
-function ClaimUqName() {
+
+function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
@@ -58,7 +62,7 @@ function ClaimUqName() {
         onClick={
           async () => {
             const dnsFormat = toDNSWireFormat(`${name}.uq`);
-            console.log('DNSWIRE', dnsFormat)
+
             const tx = await fifsRegistrar.register(
               dnsFormat,
               accounts![0],
@@ -67,9 +71,10 @@ function ClaimUqName() {
             )
             await tx.wait();
             console.log('adsf', tx)
+            setConfirmedUqName(name);
           }
         }
-      >Register Uqname with {accounts![0]}</button>
+      >Register Uqname</button>
     </div>
   )
 }
