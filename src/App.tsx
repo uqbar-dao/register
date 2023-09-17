@@ -8,6 +8,7 @@ import {
 import ConnectWallet from "./components/ConnectWallet";
 import ClaimUqName from "./components/ClaimUqName";
 import SetPassword from "./components/SetPassword";
+import SetWs from "./components/SetWs";
 
 export type WsRouting = {
   ip: string,
@@ -33,6 +34,7 @@ function App() {
   let provider = useProvider();
   let [confirmedUqName, setConfirmedUqName] = useState('');
   let [our, setOur] = useState<Identity | null>(null);
+  let [done, setDone] = useState(false);
 
   if (!chainId) return <ConnectWallet />
   if (!provider) return <ConnectWallet />
@@ -45,7 +47,8 @@ function App() {
       {
         !confirmedUqName? <ClaimUqName setConfirmedUqName={setConfirmedUqName}/> :
         !our?             <SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/> :
-        <>TODO post to chain using setWs</>
+        !done?            <SetWs our={our!} setDone={setDone}/> :
+        <>done registration</>
       }
     </>
   )
