@@ -39,7 +39,8 @@ function SetWs({ our, setDone }: SetWsProps) {
     setIsLoading(true);
     await tx.wait();
     setIsLoading(false);
-    setDone(true);
+    setDone(true); // TODO pretty sure we don't need this
+    window.location.href = '/';
   }
 
   return (

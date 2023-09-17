@@ -36,15 +36,14 @@ function App() {
   let [our, setOur] = useState<Identity | null>(null);
   let [done, setDone] = useState(false);
 
-  if (!chainId) return <ConnectWallet />
-  if (!provider) return <ConnectWallet />
-  if (!(chainId in QNS_REGISTRY_ADDRESSES)) return <p>change networks</p>
-  if (!(chainId in PUBLIC_RESOLVER_ADDRESSES)) return <p>change networks</p>
-  if (!(chainId in FIFS_REGISTRAR_ADDRESSES)) return <p>change networks</p>
-
   return (
     <>
       {
+        !chainId?  <ConnectWallet /> :
+        !provider? <ConnectWallet /> :
+        !(chainId in QNS_REGISTRY_ADDRESSES)?    <p>change networks</p> :
+        !(chainId in PUBLIC_RESOLVER_ADDRESSES)? <p>change networks</p> :
+        !(chainId in FIFS_REGISTRAR_ADDRESSES)?  <p>change networks</p> :
         !confirmedUqName? <ClaimUqName setConfirmedUqName={setConfirmedUqName}/> :
         !our?             <SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/> :
         !done?            <SetWs our={our!} setDone={setDone}/> :
