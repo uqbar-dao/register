@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { hooks } from "../connectors/metamask";
 import type { Identity } from "../App";
 
@@ -17,28 +17,36 @@ function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
   let [password, setPassword] = useState('');
   let [confirmPw, setConfirmPw] = useState('');
   let [direct, setDirect] = useState(false);
+  let [error, setError] = useState('');
+
+  useEffect(() => {
+    setError('')
+  }, [password, confirmPw])
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
+
+    if (password !== confirmPw) {
+      setError('Passwords do not match');
+      return false;
+    }
 
     try {
       const response = await fetch('/get-ws-info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: confirmedUqName, password, address: accounts![0], direct }) // TODO accounts!
+        body: JSON.stringify({ username: confirmedUqName, password, address: accounts![0], direct }) // TODO accounts error handling
       });
+      
       const message = await response.text();
       setOur(JSON.parse(message))
-      console.log('our', JSON.parse(message))
+
       if (!message) {
         window.alert('There was an error registering your uqname. Please try again')
-        // document.getElementById('loading').style.display = 'none'
-        // document.getElementById('signup-form').style.display = 'flex'
         return false
       }
-    } catch (error) {
-      console.log("SOME ERROR")
-      // setMessage(null);
+    } catch (err) {
+      console.error("Error during registration:", err);
     }
   };
 
@@ -73,6 +81,7 @@ function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
         value={confirmPw}
         onChange={(e) => setConfirmPw(e.target.value)}
       />
+      <p style={{color: "red"}}>{error}</p>
       <label htmlFor="direct">Register as a direct node (only do this if you are hosting your node somewhere stable)</label>
       <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
       <button type="submit">Sign & Submit</button>
