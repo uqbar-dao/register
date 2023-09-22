@@ -35,7 +35,8 @@ function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
       const response = await fetch('/get-ws-info', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username: confirmedUqName, password, address: accounts![0], direct }) // TODO accounts error handling
+        // NOTE if this is used for other TLDs we have to change .uq
+        body: JSON.stringify({ username: `${confirmedUqName}.uq`, password, address: accounts![0], direct }) // TODO accounts error handling
       });
       
       const message = await response.text();

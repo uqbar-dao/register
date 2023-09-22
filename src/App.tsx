@@ -2,24 +2,18 @@ import React, { useState } from "react";
 import { hooks } from "./connectors/metamask";
 import {
   QNS_REGISTRY_ADDRESSES,
-  PUBLIC_RESOLVER_ADDRESSES,
-  FIFS_REGISTRAR_ADDRESSES
+  UQ_NFT_ADDRESSES,
 } from "./constants/addresses";
 import ConnectWallet from "./components/ConnectWallet";
 import ClaimUqName from "./components/ClaimUqName";
 import SetPassword from "./components/SetPassword";
 import SetWs from "./components/SetWs";
 
-export type WsRouting = {
-  ip: string,
-  port: number
-}
-
 export type Identity = {
   name: string,
   address: string,
   networking_key: string,
-  ws_routing: WsRouting,
+  ws_routing: any[], // (string, number)
   allowed_routers: string[]
 }
 
@@ -28,13 +22,11 @@ const {
   useProvider,
 } = hooks;
 
-
 function App() {
   let chainId = useChainId();
   let provider = useProvider();
-  let [confirmedUqName, setConfirmedUqName] = useState('');
+  let [confirmedUqName, setConfirmedUqName] = useState('drew');
   let [our, setOur] = useState<Identity | null>(null);
-  let [done, setDone] = useState(false);
 
   return (
     <>
@@ -42,12 +34,10 @@ function App() {
         !chainId?  <ConnectWallet /> :
         !provider? <ConnectWallet /> :
         !(chainId in QNS_REGISTRY_ADDRESSES)?    <p>change networks</p> :
-        !(chainId in PUBLIC_RESOLVER_ADDRESSES)? <p>change networks</p> :
-        !(chainId in FIFS_REGISTRAR_ADDRESSES)?  <p>change networks</p> :
+        !(chainId in UQ_NFT_ADDRESSES)? <p>change networks</p> :
         !confirmedUqName? <ClaimUqName setConfirmedUqName={setConfirmedUqName}/> :
         !our?             <SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/> :
-        !done?            <SetWs our={our!} setDone={setDone}/> :
-        <>done registration</>
+        <SetWs our={our!} />
       }
     </>
   )

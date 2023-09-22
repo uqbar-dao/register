@@ -1,12 +1,9 @@
 import React, { useState } from "react";
 import { hooks } from "../connectors/metamask";
-import { FIFSRegistrar__factory } from "../abis/types";
+import { UqNFT__factory } from "../abis/types";
 import {
-  QNS_REGISTRY_ADDRESSES,
-  PUBLIC_RESOLVER_ADDRESSES,
-  FIFS_REGISTRAR_ADDRESSES
+  UQ_NFT_ADDRESSES,
 } from "../constants/addresses";
-import { BigNumber } from "ethers";
 import { toDNSWireFormat } from "../utils/dnsWire";
 import Loader from "./Loader";
 
@@ -30,21 +27,23 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
 
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
-  if (!(chainId in QNS_REGISTRY_ADDRESSES)) return <p>change networks</p>
-  if (!(chainId in PUBLIC_RESOLVER_ADDRESSES)) return <p>change networks</p>
-  if (!(chainId in FIFS_REGISTRAR_ADDRESSES)) return <p>change networks</p>
-  let fifsRegistrarAddress = FIFS_REGISTRAR_ADDRESSES[chainId];
-  let publicResolverAddress = PUBLIC_RESOLVER_ADDRESSES[chainId!];
-  let fifsRegistrar = FIFSRegistrar__factory.connect(fifsRegistrarAddress, provider.getSigner());
+  if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
+  let uqNftAddress = UQ_NFT_ADDRESSES[chainId];
+  let uqNft = UqNFT__factory.connect(uqNftAddress, provider.getSigner());
 
   let handleRegister = async () => {
-    const dnsFormat = toDNSWireFormat(`${name}.uq`);
+    if (!name) {
+      window.alert('Please enter a name')
+      return false
+    }
 
-    const tx = await fifsRegistrar.register(
+    const dnsFormat = toDNSWireFormat(`${name}.uq`);
+    
+    // TODO handle transaction rejected in wallet
+
+    const tx = await uqNft.register(
       dnsFormat,
-      accounts![0],
-      publicResolverAddress,
-      BigNumber.from("1844674407709551615"), // TODO this will change
+      accounts![0], // TODO let the user know that this address will be the owner
     )
     setIsLoading(true);
     await tx.wait();

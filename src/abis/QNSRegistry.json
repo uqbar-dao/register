@@ -1,8 +1,27 @@
 [
     {
         "inputs": [],
-        "stateMutability": "nonpayable",
-        "type": "constructor"
+        "name": "MustChooseStaticOrRouted",
+        "type": "error"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "previousAdmin",
+                "type": "address"
+            },
+            {
+                "indexed": false,
+                "internalType": "address",
+                "name": "newAdmin",
+                "type": "address"
+            }
+        ],
+        "name": "AdminChanged",
+        "type": "event"
     },
     {
         "anonymous": false,
@@ -10,23 +29,24 @@
             {
                 "indexed": true,
                 "internalType": "address",
-                "name": "owner",
+                "name": "beacon",
                 "type": "address"
-            },
-            {
-                "indexed": true,
-                "internalType": "address",
-                "name": "operator",
-                "type": "address"
-            },
-            {
-                "indexed": false,
-                "internalType": "bool",
-                "name": "approved",
-                "type": "bool"
             }
         ],
-        "name": "ApprovalForAll",
+        "name": "BeaconUpgraded",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": false,
+                "internalType": "uint8",
+                "name": "version",
+                "type": "uint8"
+            }
+        ],
+        "name": "Initialized",
         "type": "event"
     },
     {
@@ -47,11 +67,62 @@
             {
                 "indexed": false,
                 "internalType": "address",
-                "name": "owner",
+                "name": "nft",
                 "type": "address"
             }
         ],
-        "name": "NameRegistered",
+        "name": "NewSubdomainContract",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "uint256",
+                "name": "node",
+                "type": "uint256"
+            },
+            {
+                "indexed": false,
+                "internalType": "bytes",
+                "name": "name",
+                "type": "bytes"
+            }
+        ],
+        "name": "NodeRegistered",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "previousOwner",
+                "type": "address"
+            },
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "OwnershipTransferred",
+        "type": "event"
+    },
+    {
+        "anonymous": false,
+        "inputs": [
+            {
+                "indexed": true,
+                "internalType": "address",
+                "name": "implementation",
+                "type": "address"
+            }
+        ],
+        "name": "Upgraded",
         "type": "event"
     },
     {
@@ -65,99 +136,54 @@
             },
             {
                 "indexed": true,
+                "internalType": "uint32",
+                "name": "protocols",
+                "type": "uint32"
+            },
+            {
+                "indexed": false,
                 "internalType": "bytes32",
-                "name": "label",
+                "name": "publicKey",
                 "type": "bytes32"
             },
             {
                 "indexed": false,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            }
-        ],
-        "name": "NewOwner",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
+                "internalType": "uint48",
+                "name": "ipAndPort",
+                "type": "uint48"
             },
             {
                 "indexed": false,
-                "internalType": "address",
-                "name": "resolver",
-                "type": "address"
+                "internalType": "bytes32[]",
+                "name": "routers",
+                "type": "bytes32[]"
             }
         ],
-        "name": "NewResolver",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "uint64",
-                "name": "ttl",
-                "type": "uint64"
-            }
-        ],
-        "name": "NewTTL",
-        "type": "event"
-    },
-    {
-        "anonymous": false,
-        "inputs": [
-            {
-                "indexed": true,
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
-            },
-            {
-                "indexed": false,
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            }
-        ],
-        "name": "Transfer",
+        "name": "WsChanged",
         "type": "event"
     },
     {
         "inputs": [
             {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "operator",
-                "type": "address"
+                "internalType": "bytes",
+                "name": "fqdn",
+                "type": "bytes"
             }
         ],
-        "name": "isApprovedForAll",
+        "name": "_getNodeAndParent",
         "outputs": [
             {
-                "internalType": "bool",
-                "name": "approved",
-                "type": "bool"
+                "internalType": "uint256",
+                "name": "node",
+                "type": "uint256"
+            },
+            {
+                "internalType": "uint256",
+                "name": "parentNode",
+                "type": "uint256"
             }
         ],
-        "stateMutability": "view",
+        "stateMutability": "pure",
         "type": "function"
     },
     {
@@ -166,13 +192,45 @@
                 "internalType": "uint256",
                 "name": "node",
                 "type": "uint256"
+            },
+            {
+                "internalType": "uint32",
+                "name": "protocols",
+                "type": "uint32"
             }
         ],
+        "name": "clearProtocol",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "getInitializedVersion",
+        "outputs": [
+            {
+                "internalType": "uint8",
+                "name": "",
+                "type": "uint8"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "initialize",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
         "name": "owner",
         "outputs": [
             {
                 "internalType": "address",
-                "name": "owner",
+                "name": "",
                 "type": "address"
             }
         ],
@@ -180,19 +238,13 @@
         "type": "function"
     },
     {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
-            }
-        ],
-        "name": "recordExists",
+        "inputs": [],
+        "name": "proxiableUUID",
         "outputs": [
             {
-                "internalType": "bool",
-                "name": "exists",
-                "type": "bool"
+                "internalType": "bytes32",
+                "name": "",
+                "type": "bytes32"
             }
         ],
         "stateMutability": "view",
@@ -202,53 +254,35 @@
         "inputs": [
             {
                 "internalType": "uint256",
-                "name": "node",
+                "name": "",
                 "type": "uint256"
             }
         ],
-        "name": "resolver",
+        "name": "records",
         "outputs": [
-            {
-                "internalType": "address",
-                "name": "resolver",
-                "type": "address"
-            }
-        ],
-        "stateMutability": "view",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "address",
-                "name": "operator",
-                "type": "address"
-            },
-            {
-                "internalType": "bool",
-                "name": "approved",
-                "type": "bool"
-            }
-        ],
-        "name": "setApprovalForAll",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
-            },
             {
                 "internalType": "address",
                 "name": "owner",
                 "type": "address"
+            },
+            {
+                "internalType": "uint32",
+                "name": "protocols",
+                "type": "uint32"
             }
         ],
-        "name": "setOwner",
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "bytes",
+                "name": "fqdn",
+                "type": "bytes"
+            }
+        ],
+        "name": "registerNode",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -262,21 +296,18 @@
             },
             {
                 "internalType": "address",
-                "name": "owner",
+                "name": "nft",
                 "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "resolver",
-                "type": "address"
-            },
-            {
-                "internalType": "uint64",
-                "name": "ttl",
-                "type": "uint64"
             }
         ],
-        "name": "setRecord",
+        "name": "registerSubdomainContract",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [],
+        "name": "renounceOwnership",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -289,12 +320,27 @@
                 "type": "uint256"
             },
             {
-                "internalType": "address",
-                "name": "resolver",
-                "type": "address"
+                "internalType": "bytes32",
+                "name": "publicKey",
+                "type": "bytes32"
+            },
+            {
+                "internalType": "uint32",
+                "name": "ip",
+                "type": "uint32"
+            },
+            {
+                "internalType": "uint16",
+                "name": "port",
+                "type": "uint16"
+            },
+            {
+                "internalType": "bytes32[]",
+                "name": "routers",
+                "type": "bytes32[]"
             }
         ],
-        "name": "setResolver",
+        "name": "setWsRecord",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
@@ -302,63 +348,97 @@
     {
         "inputs": [
             {
-                "internalType": "bytes",
-                "name": "fqdn",
-                "type": "bytes"
-            },
-            {
-                "internalType": "address",
-                "name": "owner",
-                "type": "address"
-            },
-            {
-                "internalType": "address",
-                "name": "resolver",
-                "type": "address"
-            },
-            {
-                "internalType": "uint64",
-                "name": "ttl",
-                "type": "uint64"
+                "internalType": "bytes4",
+                "name": "interfaceID",
+                "type": "bytes4"
             }
         ],
-        "name": "setSubnodeRecord",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint64",
-                "name": "ttl",
-                "type": "uint64"
-            }
-        ],
-        "name": "setTTL",
-        "outputs": [],
-        "stateMutability": "nonpayable",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
-            }
-        ],
-        "name": "ttl",
+        "name": "supportsInterface",
         "outputs": [
             {
-                "internalType": "uint64",
-                "name": "ttl",
-                "type": "uint64"
+                "internalType": "bool",
+                "name": "",
+                "type": "bool"
+            }
+        ],
+        "stateMutability": "view",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newOwner",
+                "type": "address"
+            }
+        ],
+        "name": "transferOwnership",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newImplementation",
+                "type": "address"
+            }
+        ],
+        "name": "upgradeTo",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "newImplementation",
+                "type": "address"
+            },
+            {
+                "internalType": "bytes",
+                "name": "data",
+                "type": "bytes"
+            }
+        ],
+        "name": "upgradeToAndCall",
+        "outputs": [],
+        "stateMutability": "payable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "uint256",
+                "name": "node",
+                "type": "uint256"
+            }
+        ],
+        "name": "ws",
+        "outputs": [
+            {
+                "components": [
+                    {
+                        "internalType": "bytes32",
+                        "name": "publicKey",
+                        "type": "bytes32"
+                    },
+                    {
+                        "internalType": "uint48",
+                        "name": "ipAndPort",
+                        "type": "uint48"
+                    },
+                    {
+                        "internalType": "bytes32[]",
+                        "name": "routers",
+                        "type": "bytes32[]"
+                    }
+                ],
+                "internalType": "struct IQNS.WsRecord",
+                "name": "",
+                "type": "tuple"
             }
         ],
         "stateMutability": "view",
