@@ -33,9 +33,9 @@ function SetWs({ our }: SetWsProps) {
     const tx = await qnsRegistry.setWsRecord(
       `${namehash(our.name)}`,
       `0x${our.networking_key}`,
-      our.ws_routing? ipToNumber(our.ws_routing[0]) : 0, // TODO need to convert ip to a uint48!
+      our.ws_routing? ipToNumber(our.ws_routing[0]) : 0,
       our.ws_routing? our.ws_routing[1]: 0,
-      our.allowed_routers,
+      our.allowed_routers.map((router) => namehash(router)),
     )
     setIsLoading(true);
     await tx.wait();
