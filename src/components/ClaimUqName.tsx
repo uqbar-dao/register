@@ -72,6 +72,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
               value={name}
               onChange={(e) => setName(e.target.value)}
               type="text"
+              minLength={9}
               required
               name="uq-name"
               placeholder="e.g. myname"
