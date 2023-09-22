@@ -48,7 +48,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
     setIsLoading(true);
     await tx.wait();
     setIsLoading(false);
-    setConfirmedUqName(name);
+    setConfirmedUqName(`${name}.uq`);
   }
 
   return (

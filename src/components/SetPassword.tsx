@@ -36,7 +36,7 @@ function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         // NOTE if this is used for other TLDs we have to change .uq
-        body: JSON.stringify({ username: `${confirmedUqName}.uq`, password, address: accounts![0], direct }) // TODO accounts error handling
+        body: JSON.stringify({ username: confirmedUqName, password, address: accounts![0], direct }) // TODO accounts error handling
       });
       
       const message = await response.text();

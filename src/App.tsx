@@ -25,7 +25,7 @@ const {
 function App() {
   let chainId = useChainId();
   let provider = useProvider();
-  let [confirmedUqName, setConfirmedUqName] = useState('drew');
+  let [confirmedUqName, setConfirmedUqName] = useState('');
   let [our, setOur] = useState<Identity | null>(null);
 
   return (
@@ -33,8 +33,8 @@ function App() {
       {
         !chainId?  <ConnectWallet /> :
         !provider? <ConnectWallet /> :
-        !(chainId in QNS_REGISTRY_ADDRESSES)?    <p>change networks</p> :
-        !(chainId in UQ_NFT_ADDRESSES)? <p>change networks</p> :
+        !(chainId in QNS_REGISTRY_ADDRESSES)? <p>change networks</p> :
+        !(chainId in UQ_NFT_ADDRESSES)?       <p>change networks</p> :
         !confirmedUqName? <ClaimUqName setConfirmedUqName={setConfirmedUqName}/> :
         !our?             <SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/> :
         <SetWs our={our!} />
