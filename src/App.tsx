@@ -11,7 +11,6 @@ import SetWs from "./components/SetWs";
 
 export type Identity = {
   name: string,
-  address: string,
   networking_key: string,
   ws_routing: any[], // (string, number)
   allowed_routers: string[]
