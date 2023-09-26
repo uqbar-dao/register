@@ -155,35 +155,11 @@
         "inputs": [
             {
                 "internalType": "bytes",
-                "name": "fqdn",
-                "type": "bytes"
-            }
-        ],
-        "name": "_getNodeAndParent",
-        "outputs": [
-            {
-                "internalType": "uint256",
-                "name": "node",
-                "type": "uint256"
-            },
-            {
-                "internalType": "uint256",
-                "name": "parentNode",
-                "type": "uint256"
-            }
-        ],
-        "stateMutability": "pure",
-        "type": "function"
-    },
-    {
-        "inputs": [
-            {
-                "internalType": "bytes",
                 "name": "name",
                 "type": "bytes"
             },
             {
-                "internalType": "address",
+                "internalType": "contract IQNSNFT",
                 "name": "nft",
                 "type": "address"
             }
@@ -281,11 +257,6 @@
                 "internalType": "contract QNSRegistry",
                 "name": "_qns",
                 "type": "address"
-            },
-            {
-                "internalType": "uint256",
-                "name": "_baseNode",
-                "type": "uint256"
             }
         ],
         "name": "initialize",
@@ -485,6 +456,19 @@
     {
         "inputs": [
             {
+                "internalType": "uint256",
+                "name": "_baseNode",
+                "type": "uint256"
+            }
+        ],
+        "name": "setBaseNode",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
                 "internalType": "bytes4",
                 "name": "interfaceId",
                 "type": "bytes4"
@@ -552,6 +536,29 @@
             }
         ],
         "name": "transferFrom",
+        "outputs": [],
+        "stateMutability": "nonpayable",
+        "type": "function"
+    },
+    {
+        "inputs": [
+            {
+                "internalType": "address",
+                "name": "from",
+                "type": "address"
+            },
+            {
+                "internalType": "address",
+                "name": "to",
+                "type": "address"
+            },
+            {
+                "internalType": "uint256",
+                "name": "tokenId",
+                "type": "uint256"
+            }
+        ],
+        "name": "transferFromAndClearProtocols",
         "outputs": [],
         "stateMutability": "nonpayable",
         "type": "function"
