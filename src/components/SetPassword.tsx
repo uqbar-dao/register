@@ -85,7 +85,7 @@ function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
       <p style={{color: "red"}}>{error}</p>
       <label htmlFor="direct">Register as a direct node (only do this if you are hosting your node somewhere stable)</label>
       <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
-      <button type="submit">Sign & Submit</button>
+      <button type="submit">Submit</button>
     </form>
   )
 }
