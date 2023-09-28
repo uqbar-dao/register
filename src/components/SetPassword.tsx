@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { hooks } from "../connectors/metamask";
 import type { Identity } from "../App";
-
-const {
-  useAccounts,
-} = hooks;
+import { useNavigate } from "react-router-dom";
 
 type SetPasswordProps = {
   confirmedUqName: string,
@@ -13,11 +9,11 @@ type SetPasswordProps = {
 
 
 function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
-  let accounts = useAccounts();
   let [password, setPassword] = useState('');
   let [confirmPw, setConfirmPw] = useState('');
   let [direct, setDirect] = useState(false);
   let [error, setError] = useState('');
+  let navigate = useNavigate();
 
   useEffect(() => {
     setError('')
@@ -46,6 +42,7 @@ function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
         window.alert('There was an error registering your uqname. Please try again')
         return false
       }
+      navigate("/set-ws")
     } catch (err) {
       console.error("Error during registration:", err);
     }

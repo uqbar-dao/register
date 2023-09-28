@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { hooks } from "./connectors/metamask";
 import {
   QNS_REGISTRY_ADDRESSES,
@@ -8,6 +9,7 @@ import ConnectWallet from "./components/ConnectWallet";
 import ClaimUqName from "./components/ClaimUqName";
 import SetPassword from "./components/SetPassword";
 import SetWs from "./components/SetWs";
+import Reset from './components/Reset'
 
 export type Identity = {
   name: string,
@@ -32,11 +34,16 @@ function App() {
       {
         !chainId?  <ConnectWallet /> :
         !provider? <ConnectWallet /> :
-        !(chainId in QNS_REGISTRY_ADDRESSES)? <p>change networks</p> :
+        !(chainId in QNS_REGISTRY_ADDRESSES)? <p>change networks</p> : // TODO automatic prompt to switch to sepolia
         !(chainId in UQ_NFT_ADDRESSES)?       <p>change networks</p> :
-        !confirmedUqName? <ClaimUqName setConfirmedUqName={setConfirmedUqName}/> :
-        !our?             <SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/> :
-        <SetWs our={our!} />
+        <Router>
+          <Routes>
+            <Route path="/" element={<ClaimUqName setConfirmedUqName={setConfirmedUqName}/>} />
+            <Route path="/reset" element={<Reset setConfirmedUqName={setConfirmedUqName}/>} />
+            <Route path="/set-password" element={<SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/>} />
+            <Route path="/set-ws" element={<SetWs our={our!} />} />
+          </Routes>
+        </Router>
       }
     </>
   )

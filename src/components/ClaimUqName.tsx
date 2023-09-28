@@ -6,6 +6,7 @@ import {
 } from "../constants/addresses";
 import { toDNSWireFormat } from "../utils/dnsWire";
 import Loader from "./Loader";
+import { Link, useNavigate } from "react-router-dom";
 
 const {
   useChainId,
@@ -22,6 +23,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
+  let navigate = useNavigate();
   let [name, setName] = useState('');
   let [isLoading, setIsLoading] = useState(false);
 
@@ -49,6 +51,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
     await tx.wait();
     setIsLoading(false);
     setConfirmedUqName(`${name}.uq`);
+    navigate("/set-password");
   }
 
   return (
@@ -82,6 +85,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
           <button
             onClick={handleRegister}
           >Register Uqname</button>
+          <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
         </>
       }
     </div>
