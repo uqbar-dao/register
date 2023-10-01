@@ -40,7 +40,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
     }
 
     const dnsFormat = toDNSWireFormat(`${name}.uq`);
-    
+
     // TODO handle transaction rejected in wallet
 
     const tx = await uqNft.register(
