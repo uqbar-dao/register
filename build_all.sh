@@ -1,4 +1,5 @@
 #!/bin/bash
 nvm use
 npm install
-npm build
+npm run tc
+npm run build
