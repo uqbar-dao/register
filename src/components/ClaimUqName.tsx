@@ -19,6 +19,7 @@ type ClaimUqNameProps = {
 }
 
 
+
 function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
@@ -32,6 +33,26 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
   let uqNftAddress = UQ_NFT_ADDRESSES[chainId];
   let uqNft = UqNFT__factory.connect(uqNftAddress, provider.getSigner());
+
+  async function clickme () {
+    console.log("cliked!")
+    const uqname = "me.uq"
+    const address = accounts![0]
+    console.log("uqname", uqname)
+    console.log("address", address)
+
+    const response = await fetch('http://127.0.0.1:3001/api', {
+      method: 'POST',
+      body: JSON.stringify({ uqname, address })
+    })
+
+    const data = await response.json()
+
+    const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
+
+    console.log("THING", uint8Array)
+
+  }
 
   let handleRegister = async () => {
     if (!name) {
@@ -88,6 +109,9 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
           <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
         </>
       }
+
+        <button onClick={() => clickme()}> click! </button>
+
     </div>
   )
 }

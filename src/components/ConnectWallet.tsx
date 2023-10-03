@@ -49,7 +49,7 @@ export default function ConnectWallet() {
       <div/>
       {!isActive && (
         <button
-          onClick={activate}
+          onClick={async () => await metaMask.activate()}
           disabled={isActivating}
         >
           Connect
