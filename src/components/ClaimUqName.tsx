@@ -8,7 +8,7 @@ import { toDNSWireFormat } from "../utils/dnsWire";
 import Loader from "./Loader";
 import { Link, useNavigate } from "react-router-dom";
 import * as punycode from 'punycode/';
-import ucs2 from 'punycode/';
+import isValidDomain from 'is-valid-domain'
 
 const {
   useChainId,
@@ -26,6 +26,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let provider = useProvider();
   let navigate = useNavigate();
   let [name, setName] = useState('');
+  let [nameValidity, setNameValidity] = useState<string[]>([])
   let [invite, setInvite] = useState('');
   let [isLoading, setIsLoading] = useState(false);
 
@@ -91,6 +92,29 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
     navigate("/set-password");
   }
 
+  const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
+  const NAME_LENGTH = "Name must be 9 characters or more"
+
+  let handleName = async (input: string) => {
+
+    const len = [...input].length
+
+    if (len < 9)  {
+      if (!nameValidity.includes(NAME_LENGTH))
+        setNameValidity(nameValidity.concat([NAME_LENGTH]))
+    } else if (nameValidity.includes(NAME_LENGTH)) 
+      setNameValidity(nameValidity.filter(x => x !== NAME_LENGTH))
+
+    if (!isValidDomain(punycode.toASCII(input+'.uq'))) {
+      if (!nameValidity.includes(NAME_URL))
+        setNameValidity(nameValidity.concat([NAME_URL]))
+    } else if (nameValidity.includes(NAME_URL))
+      setNameValidity(nameValidity.filter(x => x !== NAME_URL))
+    
+    setName(input)
+
+  }
+
   return (
     <div id="signup-form" className="col">
     {
@@ -120,14 +144,14 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
           <div className="row">
             <input
               value={name}
-              onChange={(e) => setName(e.target.value)}
+              onChange={(e) => handleName(e.target.value)}
               type="text"
-              minLength={9}
               required
               name="uq-name"
               placeholder="e.g. myname"
             />
             <div className="uq">.uq</div>
+            { nameValidity.map( (x,i) => <span key={i} className="name-validity">{x}</span>) }
           </div>
           <button
             onClick={handleRegister}
