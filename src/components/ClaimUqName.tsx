@@ -7,6 +7,8 @@ import {
 import { toDNSWireFormat } from "../utils/dnsWire";
 import Loader from "./Loader";
 import { Link, useNavigate } from "react-router-dom";
+import * as punycode from 'punycode/';
+import ucs2 from 'punycode/';
 
 const {
   useChainId,
@@ -18,14 +20,13 @@ type ClaimUqNameProps = {
   setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-
-
 function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
   let navigate = useNavigate();
   let [name, setName] = useState('');
+  let [invite, setInvite] = useState('');
   let [isLoading, setIsLoading] = useState(false);
 
   if (!chainId) return <p>connect your wallet</p>
@@ -35,22 +36,37 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let uqNft = UqNFT__factory.connect(uqNftAddress, provider.getSigner());
 
   async function clickme () {
-    console.log("cliked!")
-    const uqname = "me.uq"
-    const address = accounts![0]
-    console.log("uqname", uqname)
-    console.log("address", address)
 
-    const response = await fetch('http://127.0.0.1:3001/api', {
+    const str = '😆😆😆😆😆'
+    const len = [...str].length
+
+    const address = accounts![0]
+
+    const response = await fetch('http://127.0.0.1:3000/api', {
       method: 'POST',
-      body: JSON.stringify({ uqname, address })
+      body: JSON.stringify({ name: name+".uq", address })
     })
 
     const data = await response.json()
-
     const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
 
-    console.log("THING", uint8Array)
+    const signer = await provider?.getSigner()
+
+    const signature = await signer?.signMessage(uint8Array)
+
+    data.userOperation.signature = signature
+
+    console.log("broadcasting...")
+
+    const broadcast = await fetch('http://127.0.0.1:3000/api/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({
+        userOp: data.userOperation,
+        code: invite,
+        name: name+".uq",
+        eoa: accounts![0]
+      })
+    })
 
   }
 
@@ -91,6 +107,16 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
               <div style={{fontSize: "0.75em"}}>Address:</div>
               {accounts && <div id="current-address">{accounts[0]}</div>}
             </div>
+          <div className="row">
+            <input
+              value={invite}
+              onChange={(e) => setInvite(e.target.value)}
+              type="text"
+              required
+              name="uq-invite"
+              placeholder="invite code"
+            />
+          </div>
           <div className="row">
             <input
               value={name}
