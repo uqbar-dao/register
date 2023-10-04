@@ -28,11 +28,28 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let accounts = useAccounts();
   let provider = useProvider();
   let navigate = useNavigate();
-  let [invite, setInvite] = useState('');
   let [isLoading, setIsLoading] = useState(false);
 
   let uqNftAddress = UQ_NFT_ADDRESSES[chainId!];
   let uqNft = UqNFT__factory.connect(uqNftAddress, provider!.getSigner());
+
+  let [invite, setInvite] = useState('');
+  let [inviteValidity, setInviteValidity] = useState('');
+  useEffect(() => {
+    (async() => {
+
+      const response = await fetch
+        ("http://127.0.0.1:3000/api?invite=" + invite, { method: 'GET', })
+
+      if (response.status == 200) {
+        setInviteValidity("")
+      } else {
+        const data = await response.json()
+        setInviteValidity(data.error)
+      }
+
+    })()
+  }, [invite])
 
   let [name, setName] = useState('');
   let [nameValidity, setNameValidity] = useState<string[]>([])
@@ -138,9 +155,6 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   const NAME_INVALID_PUNY = "Unsupported punycode character"
   const NAME_CLAIMED = "Name is already claimed"
 
-
-  console.log("VALIDITY", nameValidity)
-
   return (
     <div id="signup-form" className="col">
     {
@@ -166,6 +180,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
               name="uq-invite"
               placeholder="invite code"
             />
+            { inviteValidity != "" && <div className="invite-validity">{inviteValidity}</div> }
           </div>
           <div className="row">
             <input
