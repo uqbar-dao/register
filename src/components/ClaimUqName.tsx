@@ -38,36 +38,31 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
 
   async function clickme () {
 
-    const str = '😆😆😆😆😆'
-    const len = [...str].length
-
     const address = accounts![0]
 
-    const response = await fetch('http://127.0.0.1:3000/api', {
-      method: 'POST',
-      body: JSON.stringify({ name: name+".uq", address })
-    })
+    // const response = await fetch('http://127.0.0.1:3000/api', {
+    //   method: 'POST',
+    //   body: JSON.stringify({ name: name+".uq", address })
+    // })
 
-    const data = await response.json()
-    const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
+    // const data = await response.json()
+    // const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
 
-    const signer = await provider?.getSigner()
+    // const signer = await provider?.getSigner()
 
-    const signature = await signer?.signMessage(uint8Array)
+    // const signature = await signer?.signMessage(uint8Array)
 
-    data.userOperation.signature = signature
+    // data.userOperation.signature = signature
 
-    console.log("broadcasting...")
-
-    const broadcast = await fetch('http://127.0.0.1:3000/api/broadcast', {
-      method: 'POST',
-      body: JSON.stringify({
-        userOp: data.userOperation,
-        code: invite,
-        name: name+".uq",
-        eoa: accounts![0]
-      })
-    })
+    // const broadcast = await fetch('http://127.0.0.1:3000/api/broadcast', {
+    //   method: 'POST',
+    //   body: JSON.stringify({
+    //     userOp: data.userOperation,
+    //     code: invite,
+    //     name: name+".uq",
+    //     eoa: accounts![0]
+    //   })
+    // })
 
   }
 
@@ -105,7 +100,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
     } else if (nameValidity.includes(NAME_LENGTH)) 
       setNameValidity(nameValidity.filter(x => x !== NAME_LENGTH))
 
-    if (!isValidDomain(punycode.toASCII(input+'.uq'))) {
+    if (input != "" && !isValidDomain(punycode.toASCII(input+'.uq'))) {
       if (!nameValidity.includes(NAME_URL))
         setNameValidity(nameValidity.concat([NAME_URL]))
     } else if (nameValidity.includes(NAME_URL))
