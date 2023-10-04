@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { hooks } from "../connectors/metamask";
 import { UqNFT__factory } from "../abis/types";
 import {
@@ -9,6 +9,9 @@ import Loader from "./Loader";
 import { Link, useNavigate } from "react-router-dom";
 import * as punycode from 'punycode/';
 import isValidDomain from 'is-valid-domain'
+import { hash, normalize } from 'eth-ens-namehash'
+
+global.Buffer = global.Buffer || require('buffer').Buffer;
 
 const {
   useChainId,
@@ -25,44 +28,87 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   let accounts = useAccounts();
   let provider = useProvider();
   let navigate = useNavigate();
-  let [name, setName] = useState('');
-  let [nameValidity, setNameValidity] = useState<string[]>([])
   let [invite, setInvite] = useState('');
   let [isLoading, setIsLoading] = useState(false);
+
+  let uqNftAddress = UQ_NFT_ADDRESSES[chainId!];
+  let uqNft = UqNFT__factory.connect(uqNftAddress, provider!.getSigner());
+
+  let [name, setName] = useState('');
+  let [nameValidity, setNameValidity] = useState<string[]>([])
+  useEffect( () => {
+    (async() => {
+
+      let index
+      let validities = [...nameValidity]
+
+      const len = [...name].length
+
+      let normalized: string
+      index = validities.indexOf(NAME_INVALID_PUNY)
+      try {
+        normalized = normalize(punycode.toASCII(name + ".uq"))
+        if (index != -1) validities.splice(index, 1)
+      } catch (e) {
+        if (index == -1) validities.push(NAME_INVALID_PUNY)
+      }
+
+      index = validities.indexOf(NAME_LENGTH)
+      if (len < 9)  {
+        if (index == -1) validities.push(NAME_LENGTH)
+      } else if (index != -1) validities.splice(index, 1)
+
+      index = validities.indexOf(NAME_URL)
+      if (name != "" && !isValidDomain(punycode.toASCII(normalized!))) {
+        if (index == -1) validities.push(NAME_URL)
+      } else if (index != -1) validities.splice(index, 1)
+
+      index = validities.indexOf(NAME_CLAIMED)
+      if (validities.length == 0 || index != -1) {
+        try {
+          await uqNft.ownerOf(hash(punycode.toASCII(normalized!)))
+          if (index == -1) validities.push(NAME_CLAIMED)
+        } catch (e) {
+          if (index != -1) validities.splice(index, 1)
+        }
+      }
+
+      setNameValidity(validities)
+
+    })()
+  }, [ name ])
 
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
-  let uqNftAddress = UQ_NFT_ADDRESSES[chainId];
-  let uqNft = UqNFT__factory.connect(uqNftAddress, provider.getSigner());
 
   async function clickme () {
 
     const address = accounts![0]
 
-    // const response = await fetch('http://127.0.0.1:3000/api', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ name: name+".uq", address })
-    // })
+    const response = await fetch('http://127.0.0.1:3000/api', {
+      method: 'POST',
+      body: JSON.stringify({ name: name+".uq", address })
+    })
 
-    // const data = await response.json()
-    // const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
+    const data = await response.json()
+    const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
 
-    // const signer = await provider?.getSigner()
+    const signer = await provider?.getSigner()
 
-    // const signature = await signer?.signMessage(uint8Array)
+    const signature = await signer?.signMessage(uint8Array)
 
-    // data.userOperation.signature = signature
+    data.userOperation.signature = signature
 
-    // const broadcast = await fetch('http://127.0.0.1:3000/api/broadcast', {
-    //   method: 'POST',
-    //   body: JSON.stringify({
-    //     userOp: data.userOperation,
-    //     code: invite,
-    //     name: name+".uq",
-    //     eoa: accounts![0]
-    //   })
-    // })
+    const broadcast = await fetch('http://127.0.0.1:3000/api/broadcast', {
+      method: 'POST',
+      body: JSON.stringify({
+        userOp: data.userOperation,
+        code: invite,
+        name: name+".uq",
+        eoa: accounts![0]
+      })
+    })
 
   }
 
@@ -89,26 +135,11 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
 
   const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
   const NAME_LENGTH = "Name must be 9 characters or more"
+  const NAME_INVALID_PUNY = "Unsupported punycode character"
+  const NAME_CLAIMED = "Name is already claimed"
 
-  let handleName = async (input: string) => {
 
-    const len = [...input].length
-
-    if (len < 9)  {
-      if (!nameValidity.includes(NAME_LENGTH))
-        setNameValidity(nameValidity.concat([NAME_LENGTH]))
-    } else if (nameValidity.includes(NAME_LENGTH)) 
-      setNameValidity(nameValidity.filter(x => x !== NAME_LENGTH))
-
-    if (input != "" && !isValidDomain(punycode.toASCII(input+'.uq'))) {
-      if (!nameValidity.includes(NAME_URL))
-        setNameValidity(nameValidity.concat([NAME_URL]))
-    } else if (nameValidity.includes(NAME_URL))
-      setNameValidity(nameValidity.filter(x => x !== NAME_URL))
-    
-    setName(input)
-
-  }
+  console.log("VALIDITY", nameValidity)
 
   return (
     <div id="signup-form" className="col">
@@ -139,14 +170,14 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
           <div className="row">
             <input
               value={name}
-              onChange={(e) => handleName(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               type="text"
               required
               name="uq-name"
               placeholder="e.g. myname"
             />
             <div className="uq">.uq</div>
-            { nameValidity.map( (x,i) => <span key={i} className="name-validity">{x}</span>) }
+            { nameValidity.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
           </div>
           <button
             onClick={handleRegister}
