@@ -39,6 +39,11 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
       return false
     }
 
+    if (name.length < 9) {
+        window.alert('Name must be at least 9 characters')
+        return false
+    }
+
     const dnsFormat = toDNSWireFormat(`${name}.uq`);
 
     // TODO handle transaction rejected in wallet
@@ -78,7 +83,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
               minLength={9}
               required
               name="uq-name"
-              placeholder="e.g. myname"
+              placeholder="e.g. my-uqname"
             />
             <div className="uq">.uq</div>
           </div>
