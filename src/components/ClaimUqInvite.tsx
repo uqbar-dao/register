@@ -192,4 +192,4 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
   )
 }
 
-export default ClaimUqName;
+export default ClaimUqInvite;
