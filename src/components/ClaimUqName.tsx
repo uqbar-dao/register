@@ -51,6 +51,11 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
     })()
   }, [invite])
 
+  const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
+  const NAME_LENGTH = "Name must be 9 characters or more"
+  const NAME_CLAIMED = "Name is already claimed"
+  const NAME_INVALID_PUNY = "Unsupported punycode character"
+
   let [name, setName] = useState('');
   let [nameValidity, setNameValidity] = useState<string[]>([])
   useEffect( () => {
@@ -93,31 +98,37 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
       setNameValidity(validities)
 
     })()
-  }, [ name ])
+  }, [name])
 
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
 
-  async function clickme () {
+  let handleRegister = async () => {
 
-    const address = accounts![0]
+    if (nameValidity.length != 0 || inviteValidity != '') return
+    if (!name || !invite) {
+      window.alert('Please enter a name and invite code')
+      return false
+    }
 
-    const response = await fetch('http://127.0.0.1:3000/api', {
-      method: 'POST',
-      body: JSON.stringify({ name: name+".uq", address })
-    })
+    setIsLoading(true);
+
+    let response = await fetch('http://127.0.0.1:3000/api', 
+      { method: 'POST', body: JSON.stringify({ name: name+".uq", address: accounts![0] }) })
+
+    setIsLoading(false);
 
     const data = await response.json()
     const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
 
     const signer = await provider?.getSigner()
-
     const signature = await signer?.signMessage(uint8Array)
 
     data.userOperation.signature = signature
 
-    const broadcast = await fetch('http://127.0.0.1:3000/api/broadcast', {
+    setIsLoading(true);
+    response = await fetch('http://127.0.0.1:3000/api/broadcast', {
       method: 'POST',
       body: JSON.stringify({
         userOp: data.userOperation,
@@ -127,33 +138,13 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
       })
     })
 
-  }
-
-  let handleRegister = async () => {
-    if (!name) {
-      window.alert('Please enter a name')
-      return false
-    }
-
-    const dnsFormat = toDNSWireFormat(`${name}.uq`);
-
-    // TODO handle transaction rejected in wallet
-
-    const tx = await uqNft.register(
-      dnsFormat,
-      accounts![0], // TODO let the user know that this address will be the owner
-    )
-    setIsLoading(true);
-    await tx.wait();
     setIsLoading(false);
-    setConfirmedUqName(`${name}.uq`);
-    navigate("/set-password");
-  }
 
-  const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
-  const NAME_LENGTH = "Name must be 9 characters or more"
-  const NAME_INVALID_PUNY = "Unsupported punycode character"
-  const NAME_CLAIMED = "Name is already claimed"
+    setConfirmedUqName(`${name}.uq`);
+
+    navigate("/set-password");
+
+  }
 
   return (
     <div id="signup-form" className="col">
@@ -194,15 +185,10 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
             <div className="uq">.uq</div>
             { nameValidity.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
           </div>
-          <button
-            onClick={handleRegister}
-          >Register Uqname</button>
+          <button onClick={handleRegister} >Register Uqname</button>
           <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
         </>
       }
-
-        <button onClick={() => clickme()}> click! </button>
-
     </div>
   )
 }
