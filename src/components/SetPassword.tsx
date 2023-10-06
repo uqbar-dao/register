@@ -3,12 +3,11 @@ import type { Identity } from "../App";
 import { useNavigate } from "react-router-dom";
 
 type SetPasswordProps = {
-  confirmedUqName: string,
-  setOur:  React.Dispatch<React.SetStateAction<Identity | null>>
+  confirmedUqName: string
 }
 
 
-function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
+function SetPassword({ confirmedUqName }: SetPasswordProps) {
   let [password, setPassword] = useState('');
   let [confirmPw, setConfirmPw] = useState('');
   let [direct, setDirect] = useState(false);
@@ -27,25 +26,20 @@ function SetPassword({ confirmedUqName, setOur }: SetPasswordProps) {
       return false;
     }
 
-    try {
-      const response = await fetch('/get-ws-info', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        // NOTE if this is used for other TLDs we have to change .uq
-        body: JSON.stringify({ username: confirmedUqName, password, direct })
-      });
-      
-      const message = await response.text();
-      setOur(JSON.parse(message))
+    const result = await fetch('/get-ws-info', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password, username: confirmedUqName, direct })
+    })
 
-      if (!message) {
-        window.alert('There was an error registering your uqname. Please try again')
-        return false
+    const interval = setInterval(async () => {
+      const homepageResult = await fetch('/') 
+      if (homepageResult.status < 400) {
+        clearInterval(interval)
+        window.location.replace('/')
       }
-      navigate("/set-ws")
-    } catch (err) {
-      console.error("Error during registration:", err);
-    }
+    }, 2000);
+
   };
 
   return (
