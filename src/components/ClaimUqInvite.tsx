@@ -9,6 +9,7 @@ import { Link, useNavigate } from "react-router-dom";
 import * as punycode from 'punycode/';
 import isValidDomain from 'is-valid-domain'
 import { hash, normalize } from 'eth-ens-namehash'
+import { Identity } from "../App";
 
 global.Buffer = global.Buffer || require('buffer').Buffer;
 
@@ -99,6 +100,20 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     })()
   }, [name])
 
+  const [ networkingKey, setNetworkingKey ] = useState<string>("")
+  const [ routers, setRouters ] = useState<string[]>([])
+  const [ ipAddress, setIpAddress ] = useState<string>("")
+  const [ port, setPort ] = useState<number>(0)
+
+  useEffect(() => {
+    (async () => {
+      const response = await fetch('/get-ws-info', { method: 'GET'})
+      const data = await response.json()
+      setNetworkingKey(data.networking_key)
+      setRouters(data.allowed_routers)
+    })()
+  }, []);
+
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
@@ -114,7 +129,17 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     setIsLoading(true);
 
     let response = await fetch('http://127.0.0.1:3000/api', 
-      { method: 'POST', body: JSON.stringify({ name: name+".uq", address: accounts![0] }) })
+      { method: 'POST', 
+        body: JSON.stringify({ 
+          name: name+".uq", 
+          address: accounts![0],
+          networkingKey: networkingKey,
+          wsIp: ipAddress,
+          wsPort: port,
+          routers: routers
+        }) 
+      }
+    )
 
     setIsLoading(false);
 
@@ -151,7 +176,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
         isLoading? <Loader msg="Registering QNS ID"/> :
         <>
           <div className="row">
-            <h4>Set up your Uqbar node with a .uq name</h4>
+            <h4>Set up your Uqbar node with a .uq name.</h4>
             <div className="tooltip-container">
               <div className="tooltip-button">&#8505;</div>
               <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
