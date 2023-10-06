@@ -9,7 +9,6 @@ import ConnectWallet from "./components/ConnectWallet";
 import ClaimUqName from "./components/ClaimUqName";
 import ClaimUqInvite from "./components/ClaimUqInvite";
 import SetPassword from "./components/SetPassword";
-import SetWs from "./components/SetWs";
 import Reset from './components/Reset'
 
 export type Identity = {
@@ -39,11 +38,10 @@ function App() {
         !(chainId in UQ_NFT_ADDRESSES)?       <p>change networks</p> :
         <Router>
           <Routes>
-            <Route path="/claim-invite" element={<ClaimUqInvite setConfirmedUqName={setConfirmedUqName}/>} />
-            <Route path="/" element={<ClaimUqName setConfirmedUqName={setConfirmedUqName}/>} />
+            {/* <Route path="/" element={<ClaimUqName setConfirmedUqName={setConfirmedUqName}/>} /> */}
+            <Route path="/" element={<ClaimUqInvite setConfirmedUqName={setConfirmedUqName}/>} />
+            <Route path="/set-password" element={<SetPassword confirmedUqName={confirmedUqName}/>} />
             <Route path="/reset" element={<Reset setConfirmedUqName={setConfirmedUqName}/>} />
-            <Route path="/set-password" element={<SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/>} />
-            <Route path="/set-ws" element={<SetWs our={our!} />} />
           </Routes>
         </Router>
       }
