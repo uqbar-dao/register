@@ -39,7 +39,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     (async() => {
 
       const response = await fetch
-        ("http://127.0.0.1:3000/api?invite=" + invite, { method: 'GET', })
+        (process.env.REACT_APP_INVITE_API + invite, { method: 'GET', })
 
       if (response.status == 200) {
         setInviteValidity("")
@@ -128,7 +128,8 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     setIsLoading(true);
 
-    let response = await fetch('http://127.0.0.1:3000/api', 
+    let response = await fetch(
+      process.env.REACT_APP_INVITE_API + '/api', 
       { method: 'POST', 
         body: JSON.stringify({ 
           name: name+".uq", 
@@ -152,15 +153,17 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     data.userOperation.signature = signature
 
     setIsLoading(true);
-    response = await fetch('http://127.0.0.1:3000/api/broadcast', {
-      method: 'POST',
-      body: JSON.stringify({
-        userOp: data.userOperation,
-        code: invite,
-        name: name+".uq",
-        eoa: accounts![0]
-      })
-    })
+    response = await fetch( 
+      process.env.REACT_APP_INVITE_API + '/api/broadcast', 
+      { method: 'POST',
+        body: JSON.stringify({
+          userOp: data.userOperation,
+          code: invite,
+          name: name+".uq",
+          eoa: accounts![0]
+        })
+      }
+    )
 
     setIsLoading(false);
 
