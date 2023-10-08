@@ -38,8 +38,8 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
   useEffect(() => {
     (async() => {
 
-      const response = await fetch
-        (process.env.REACT_APP_INVITE_API + invite, { method: 'GET', })
+      const url = process.env.REACT_APP_INVITE_API + "/api?invite=" + invite
+      const response = await fetch(url, { method: 'GET', })
 
       if (response.status == 200) {
         setInviteValidity("")
@@ -128,8 +128,9 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     setIsLoading(true);
 
-    let response = await fetch(
-      process.env.REACT_APP_INVITE_API + '/api', 
+    let url = process.env.REACT_APP_INVITE_API + '/api';
+
+    let response = await fetch(url,
       { method: 'POST', 
         body: JSON.stringify({ 
           name: name+".uq", 
@@ -153,8 +154,10 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     data.userOperation.signature = signature
 
     setIsLoading(true);
-    response = await fetch( 
-      process.env.REACT_APP_INVITE_API + '/api/broadcast', 
+
+    url = process.env.REACT_APP_INVITE_API + '/api/broadcast';
+
+    response = await fetch(url,
       { method: 'POST',
         body: JSON.stringify({
           userOp: data.userOperation,
