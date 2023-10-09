@@ -39,6 +39,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     (async() => {
 
       const url = process.env.REACT_APP_INVITE_API + "/api?invite=" + invite
+
       const response = await fetch(url, { method: 'GET', })
 
       if (response.status == 200) {
@@ -126,22 +127,37 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
       return false
     }
 
+    let response
+
     setIsLoading(true);
+    
+    try {
 
-    let url = process.env.REACT_APP_INVITE_API + '/api';
+      const userOpUrl = process.env.REACT_APP_INVITE_API + '/api';
 
-    let response = await fetch(url,
-      { method: 'POST', 
-        body: JSON.stringify({ 
-          name: name+".uq", 
-          address: accounts![0],
-          networkingKey: networkingKey,
-          wsIp: ipAddress,
-          wsPort: port,
-          routers: routers
-        }) 
-      }
-    )
+      response = await fetch(userOpUrl,
+        { method: 'POST', 
+          body: JSON.stringify({ 
+            name: name+".uq", 
+            address: accounts![0],
+            networkingKey: networkingKey,
+            wsIp: ipAddress,
+            wsPort: port,
+            routers: routers
+          }) 
+        }
+      )
+
+    } catch (e) {
+
+      setIsLoading(false)
+
+      alert(e)
+
+      console.error("error from fetching userOp:", e);
+      return;
+
+    }
 
     setIsLoading(false);
 
@@ -155,18 +171,29 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     setIsLoading(true);
 
-    url = process.env.REACT_APP_INVITE_API + '/api/broadcast';
+    const broadcastUrl = process.env.REACT_APP_INVITE_API + '/api/broadcast';
 
-    response = await fetch(url,
-      { method: 'POST',
-        body: JSON.stringify({
-          userOp: data.userOperation,
-          code: invite,
-          name: name+".uq",
-          eoa: accounts![0]
-        })
-      }
-    )
+    try {
+
+      response = await fetch(broadcastUrl,
+        { method: 'POST',
+          body: JSON.stringify({
+            userOp: data.userOperation,
+            code: invite,
+            name: name+".uq",
+            eoa: accounts![0]
+          })
+        }
+      )
+
+    } catch (e) {
+
+      setIsLoading(false);
+      alert(e)
+      console.error("error from broadcasting userOp:", e);
+      return;
+
+    }
 
     setIsLoading(false);
 
