@@ -51,6 +51,7 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
     const tx = await uqNft.register(
       dnsFormat,
       accounts![0], // TODO let the user know that this address will be the owner
+      []
     )
     setIsLoading(true);
     await tx.wait();
