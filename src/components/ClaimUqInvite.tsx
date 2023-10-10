@@ -38,15 +38,17 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
   useEffect(() => {
     (async() => {
 
-      const url = process.env.REACT_APP_INVITE_API + "/api?invite=" + invite
+      if (invite != "") {
 
-      const response = await fetch(url, { method: 'GET', })
+        const url = process.env.REACT_APP_INVITE_GET + invite
 
-      if (response.status == 200) {
-        setInviteValidity("")
-      } else {
-        const data = await response.json()
-        setInviteValidity(data.error)
+        const response = await fetch(url, { method: 'GET', })
+
+        if (response!.status == 200) {
+          setInviteValidity("")
+        } else {
+          setInviteValidity(await response.text())
+        }
       }
 
     })()
@@ -133,10 +135,10 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     
     try {
 
-      const userOpUrl = process.env.REACT_APP_INVITE_API + '/api';
-
-      response = await fetch(userOpUrl,
+      response = await fetch(
+        process.env.REACT_APP_BUILD_USER_OP_POST!,
         { method: 'POST', 
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ 
             name: name+".uq", 
             address: accounts![0],
@@ -162,7 +164,12 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     setIsLoading(false);
 
     const data = await response.json()
-    const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
+
+    console.log("RESPONSE", response)
+    console.log("DATA", data)
+
+    const uint8Array = new Uint8Array(Object.values(data.message))
+    // const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
 
     const signer = await provider?.getSigner()
     const signature = await signer?.signMessage(uint8Array)
@@ -171,12 +178,12 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     setIsLoading(true);
 
-    const broadcastUrl = process.env.REACT_APP_INVITE_API + '/api/broadcast';
-
     try {
 
-      response = await fetch(broadcastUrl,
+      response = await fetch(
+        process.env.REACT_APP_BROADCAST_USER_OP_POST!,
         { method: 'POST',
+          // headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userOp: data.userOperation,
             code: invite,
