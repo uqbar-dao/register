@@ -1,14 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect } from "react";
 import { hooks } from "../connectors/metamask";
 import { UqNFT__factory } from "../abis/types";
-import {
-  UQ_NFT_ADDRESSES,
-} from "../constants/addresses";
-import Loader from "./Loader";
-import { Link, useNavigate } from "react-router-dom";
-import * as punycode from 'punycode/';
+import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
 import isValidDomain from 'is-valid-domain'
-import { hash, normalize } from 'eth-ens-namehash'
+import { hash } from 'eth-ens-namehash'
 import { toAscii } from 'idna-uts46-hx'
 
 global.Buffer = global.Buffer || require('buffer').Buffer;
