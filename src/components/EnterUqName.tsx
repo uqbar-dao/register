@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import { hooks } from "../connectors/metamask";
 import { UqNFT__factory } from "../abis/types";
 import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
@@ -40,56 +40,65 @@ function EnterUqName({
   const NAME_CLAIMED = "Name is already claimed"
   const NAME_INVALID_PUNY = "Unsupported punycode character"
 
+  const noDots = (e: any) => 
+    e.target.value.indexOf('.') == -1 && setName(e.target.value) 
+
+  const debouncer = useRef<NodeJS.Timeout | null>(null)
+
   useEffect( () => {
-    (async() => {
 
-      let index
-      let validities = [...nameValidities]
+    if (debouncer.current) 
+      clearTimeout(debouncer.current);
 
-      const len = [...name].length
-      index = validities.indexOf(NAME_LENGTH)
-      if (len < 9)  {
-        if (index == -1) validities.push(NAME_LENGTH)
-      } else if (index != -1) validities.splice(index, 1)
+    debouncer.current = setTimeout(async () => {
 
-      let normalized: string
-      index = validities.indexOf(NAME_INVALID_PUNY)
-      try {
-        normalized = toAscii(name + ".uq")
-        if (index != -1) validities.splice(index, 1)
-      } catch (e) {
-        if (index == -1) validities.push(NAME_INVALID_PUNY)
-      }
+        let index: number
+        let validities = [...nameValidities]
 
-      // only check if name is valid punycode
-      if (normalized! !== undefined) {
-
-        index = validities.indexOf(NAME_URL)
-        if (name != "" && !isValidDomain(normalized)) {
-          if (index == -1) validities.push(NAME_URL)
+        const len = [...name].length
+        index = validities.indexOf(NAME_LENGTH)
+        if (len < 9 && len != 0)  {
+          if (index == -1) validities.push(NAME_LENGTH)
         } else if (index != -1) validities.splice(index, 1)
 
-        index = validities.indexOf(NAME_CLAIMED)
-        if (validities.length == 0 || index != -1) {
-          try {
-            await uqNft.ownerOf(hash(normalized))
-            if (index == -1) validities.push(NAME_CLAIMED)
-          } catch (e) {
-            if (index != -1) validities.splice(index, 1)
+        let normalized: string
+        index = validities.indexOf(NAME_INVALID_PUNY)
+        try {
+          normalized = toAscii(name + ".uq")
+          if (index != -1) validities.splice(index, 1)
+        } catch (e) {
+          if (index == -1) validities.push(NAME_INVALID_PUNY)
+        }
+
+        // only check if name is valid punycode
+        if (normalized! !== undefined) {
+
+          index = validities.indexOf(NAME_URL)
+          if (name != "" && !isValidDomain(normalized)) {
+            if (index == -1) validities.push(NAME_URL)
+          } else if (index != -1) validities.splice(index, 1)
+
+          index = validities.indexOf(NAME_CLAIMED)
+          if (validities.length == 0 || index != -1) {
+            try {
+              await uqNft.ownerOf(hash(normalized))
+              if (index == -1) validities.push(NAME_CLAIMED)
+            } catch (e) {
+              if (index != -1) validities.splice(index, 1)
+            }
           }
         }
-      }
 
-      setNameValidities(validities)
+        setNameValidities(validities)
 
-    })()
+    }, 500)
   }, [name])
 
     return (
       <div className="row">
         <input
           value={name}
-          onChange={(e) => setName(e.target.value)}
+          onChange={noDots}
           type="text"
           required
           name="uq-name"
