@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { hooks } from "./connectors/metamask";
 import {
@@ -6,10 +6,11 @@ import {
   UQ_NFT_ADDRESSES,
 } from "./constants/addresses";
 import ConnectWallet from "./components/ConnectWallet";
-import ClaimUqName from "./components/ClaimUqName";
+import RegisterUqName from "./components/RegisterUqName";
 import ClaimUqInvite from "./components/ClaimUqInvite";
 import SetPassword from "./components/SetPassword";
 import Reset from './components/Reset'
+import UqHome from "./components/UqHome"
 
 export type Identity = {
   name: string,
@@ -27,7 +28,6 @@ function App() {
   let chainId = useChainId();
   let provider = useProvider();
   let [confirmedUqName, setConfirmedUqName] = useState('');
-  let [our, setOur] = useState<Identity | null>(null);
 
   return (
     <>
@@ -38,8 +38,9 @@ function App() {
         !(chainId in UQ_NFT_ADDRESSES)?       <p>change networks</p> :
         <Router>
           <Routes>
-            {/* <Route path="/" element={<ClaimUqName setConfirmedUqName={setConfirmedUqName}/>} /> */}
-            <Route path="/" element={<ClaimUqInvite setConfirmedUqName={setConfirmedUqName}/>} />
+            <Route path="/" element={<UqHome/>} />
+            <Route path="/register-name" element={<RegisterUqName setConfirmedUqName={setConfirmedUqName}/>} />
+            <Route path="/claim-invite" element={<ClaimUqInvite setConfirmedUqName={setConfirmedUqName}/>} />
             <Route path="/set-password" element={<SetPassword confirmedUqName={confirmedUqName}/>} />
             <Route path="/reset" element={<Reset setConfirmedUqName={setConfirmedUqName}/>} />
           </Routes>

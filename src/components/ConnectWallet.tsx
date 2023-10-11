@@ -19,8 +19,6 @@ export default function ConnectWallet() {
     try {
       const networkId = String(await (window.ethereum as any)?.request({ method: 'net_version' }).catch(() => '0x1'))
 
-      console.log('networkId', networkId)
-
       if (networkId !== SEPOLIA_OPT_HEX && networkId !== SEPOLIA_OPT_INT) {
         const SEPOLIA_DETAILS = {
           chainId: '0xaa36a7', // Replace with the correct chainId for Sepolia

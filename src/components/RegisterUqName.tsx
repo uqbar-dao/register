@@ -4,10 +4,8 @@ import { UqNFT__factory, QNSRegistry__factory } from "../abis/types";
 import { Link, useNavigate } from "react-router-dom";
 import { toDNSWireFormat } from "../utils/dnsWire";
 import { utils } from 'ethers';
-import { 
-  UQ_NFT_ADDRESSES, 
-  QNS_REGISTRY_ADDRESSES 
-} from "../constants/addresses";
+import { ipToNumber } from "../utils/ipToNumber";
+import { UQ_NFT_ADDRESSES, QNS_REGISTRY_ADDRESSES } from "../constants/addresses";
 import EnterUqName from "./EnterUqName";
 import Loader from "./Loader";
 
@@ -17,17 +15,34 @@ const {
   useProvider,
 } = hooks;
 
-type ClaimUqNameProps = {
+type RegisterUqNameProps = {
   setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
+function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
   let navigate = useNavigate();
-  let [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
+  const [name, setName] = useState('')
+  const [nameValidities, setNameValidities] = useState<string[]>([])
+
+  const [networkingKey, setNetworkingKey] = useState<string>('')
+  const [ipAddress, setIAddress] = useState<string>('0.0.0.0')
+  const [port, setPort] = useState<number>(0)
+  const [routers, setRouters] = useState<string[]>([])
+
+  useEffect(() => {
+    (async () => {
+      const response = await fetch('/get-ws-info', { method: 'GET'})
+      const data = await response.json()
+      setNetworkingKey(data.networking_key)
+      setRouters(data.allowed_routers)
+    })()
+  }, [])
+  
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
@@ -38,30 +53,16 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   const qns = QNSRegistry__factory.connect(
     QNS_REGISTRY_ADDRESSES[chainId], provider.getSigner());
 
-  const [name, setName] = useState('')
-  const [nameValidities, setNameValidities] = useState<string[]>([])
+
   const enterUqNameProps = { name, setName, nameValidities, setNameValidities }
 
-  const [networkingKey, setNetworkingKey] = useState<string>('')
-  const [ipAddress, setIAddress] = useState<string>("")
-  const [port, setPort] = useState<number>(0)
-  const [routers, setRouters] = useState<string[]>([])
-
-  useEffect(() => {
-    (async () => {
-      const response = await fetch('/get-ws-info', { method: 'GET' })
-      const data = await response.json()
-      setNetworkingKey(data.networking_key)
-      setRouters(data.allowed_routers)
-    })
-  }, [])
 
   let handleRegister = async () => {
 
     const wsTx = await qns.populateTransaction.setWsRecord(
         utils.namehash(`${name}.uq`),
         '0x'+networkingKey,
-        ipAddress,
+        ipToNumber(ipAddress),
         port,
         routers.map(x => utils.namehash(x))
     )
@@ -108,4 +109,4 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   )
 }
 
-export default ClaimUqName;
+export default RegisterUqName;
