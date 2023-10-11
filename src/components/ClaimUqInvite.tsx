@@ -1,15 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { hooks } from "../connectors/metamask";
 import { UqNFT__factory } from "../abis/types";
-import {
-  UQ_NFT_ADDRESSES,
-} from "../constants/addresses";
-import Loader from "./Loader";
+import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
 import { Link, useNavigate } from "react-router-dom";
-import * as punycode from 'punycode/';
-import isValidDomain from 'is-valid-domain'
-import { hash, normalize } from 'eth-ens-namehash'
-import { Identity } from "../App";
+import EnterUqName from "./EnterUqName";
+import Loader from "./Loader";
 
 global.Buffer = global.Buffer || require('buffer').Buffer;
 
@@ -54,54 +49,8 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     })()
   }, [invite])
 
-  const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
-  const NAME_LENGTH = "Name must be 9 characters or more"
-  const NAME_CLAIMED = "Name is already claimed"
-  const NAME_INVALID_PUNY = "Unsupported punycode character"
-
   let [name, setName] = useState('');
   let [nameValidity, setNameValidity] = useState<string[]>([])
-  useEffect( () => {
-    (async() => {
-
-      let index
-      let validities = [...nameValidity]
-
-      const len = [...name].length
-
-      let normalized: string
-      index = validities.indexOf(NAME_INVALID_PUNY)
-      try {
-        normalized = normalize(punycode.toASCII(name + ".uq"))
-        if (index != -1) validities.splice(index, 1)
-      } catch (e) {
-        if (index == -1) validities.push(NAME_INVALID_PUNY)
-      }
-
-      index = validities.indexOf(NAME_LENGTH)
-      if (len < 9)  {
-        if (index == -1) validities.push(NAME_LENGTH)
-      } else if (index != -1) validities.splice(index, 1)
-
-      index = validities.indexOf(NAME_URL)
-      if (name != "" && !isValidDomain(punycode.toASCII(normalized!))) {
-        if (index == -1) validities.push(NAME_URL)
-      } else if (index != -1) validities.splice(index, 1)
-
-      index = validities.indexOf(NAME_CLAIMED)
-      if (validities.length == 0 || index != -1) {
-        try {
-          await uqNft.ownerOf(hash(punycode.toASCII(normalized!)))
-          if (index == -1) validities.push(NAME_CLAIMED)
-        } catch (e) {
-          if (index != -1) validities.splice(index, 1)
-        }
-      }
-
-      setNameValidity(validities)
-
-    })()
-  }, [name])
 
   const [ networkingKey, setNetworkingKey ] = useState<string>("")
   const [ routers, setRouters ] = useState<string[]>([])
@@ -237,18 +186,10 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
             />
             { inviteValidity != "" && <div className="invite-validity">{inviteValidity}</div> }
           </div>
-          <div className="row">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              type="text"
-              required
-              name="uq-name"
-              placeholder="e.g. myname"
-            />
-            <div className="uq">.uq</div>
-            { nameValidity.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
-          </div>
+          <EnterUqName 
+            name={name} setName={setName} 
+            nameValidities={nameValidity} setNameValidities={setNameValidity} 
+          />
           <button onClick={handleRegister} >Register Uqname</button>
           <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
         </>
