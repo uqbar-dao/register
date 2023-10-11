@@ -183,7 +183,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
       response = await fetch(
         process.env.REACT_APP_BROADCAST_USER_OP_POST!,
         { method: 'POST',
-          // headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             userOp: data.userOperation,
             code: invite,
