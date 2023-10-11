@@ -106,6 +106,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
       alert(e)
 
       console.error("error from fetching userOp:", e);
+
       return;
 
     }
@@ -114,11 +115,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     const data = await response.json()
 
-    console.log("RESPONSE", response)
-    console.log("DATA", data)
-
     const uint8Array = new Uint8Array(Object.values(data.message))
-    // const uint8Array = new Uint8Array(data.message.match(/.{1,2}/g).map((x: any) => parseInt(x, 16)));
 
     const signer = await provider?.getSigner()
     const signature = await signer?.signMessage(uint8Array)
@@ -190,7 +187,9 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
             name={name} setName={setName} 
             nameValidities={nameValidity} setNameValidities={setNameValidity} 
           />
-          <button onClick={handleRegister} >Register Uqname</button>
+          <button disabled={nameValidity.length != 0 || inviteValidity != ''} onClick={handleRegister} >
+              Register Uqname
+          </button>
           <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
         </>
       }

@@ -99,9 +99,9 @@ function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
               {accounts && <div id="current-address">{accounts[0]}</div>}
           </div>
           <EnterUqName { ...enterUqNameProps } />
-          <button
-            onClick={handleRegister}
-          >Register Uqname</button>
+          <button disabled={nameValidities.length != 0} onClick={handleRegister}>
+            Register Uqname
+          </button>
           <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
         </>
       }
