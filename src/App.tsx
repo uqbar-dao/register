@@ -28,6 +28,10 @@ function App() {
   let chainId = useChainId();
   let provider = useProvider();
   let [confirmedUqName, setConfirmedUqName] = useState('');
+  let [direct, setDirect] = useState<boolean>(false)
+
+  const props = { direct, setDirect, setConfirmedUqName }
+  const registerUqElement = <RegisterUqName direct={direct} setDirect={setDirect} setConfirmedUqName={setConfirmedUqName} />
 
   return (
     <>
@@ -39,9 +43,9 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<UqHome/>} />
-            <Route path="/register-name" element={<RegisterUqName setConfirmedUqName={setConfirmedUqName}/>} />
-            <Route path="/claim-invite" element={<ClaimUqInvite setConfirmedUqName={setConfirmedUqName}/>} />
-            <Route path="/set-password" element={<SetPassword confirmedUqName={confirmedUqName}/>} />
+            <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
+            <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
+            <Route path="/set-password" element={<SetPassword direct={direct} confirmedUqName={confirmedUqName}/>} />
             <Route path="/reset" element={<Reset setConfirmedUqName={setConfirmedUqName}/>} />
           </Routes>
         </Router>

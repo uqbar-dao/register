@@ -16,10 +16,12 @@ const {
 } = hooks;
 
 type ClaimUqNameProps = {
+  direct: boolean,
+  setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
+function ClaimUqInvite({ direct, setDirect, setConfirmedUqName }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
@@ -58,7 +60,6 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
   const [ routers, setRouters ] = useState<string[]>([])
   const [ ipAddress, setIpAddress ] = useState<number>(0)
   const [ port, setPort ] = useState<number>(0)
-  const [ direct, setDirect ] = useState<boolean>(false)
 
   useEffect(() => {
     (async () => {
@@ -101,7 +102,8 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
             networkingKey: networkingKey,
             wsIp: ipAddress,
             wsPort: port,
-            routers: routers
+            routers: routers,
+            direct: direct
           }) 
         }
       )

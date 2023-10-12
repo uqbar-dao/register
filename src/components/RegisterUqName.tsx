@@ -16,10 +16,12 @@ const {
 } = hooks;
 
 type RegisterUqNameProps = {
+  direct: boolean,
+  setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
+function RegisterUqName({ direct, setDirect, setConfirmedUqName }: RegisterUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
@@ -33,7 +35,6 @@ function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
   const [ipAddress, setIpAddress] = useState<number>(0)
   const [port, setPort] = useState<number>(0)
   const [routers, setRouters] = useState<string[]>([])
-  const [direct, setDirect] = useState<boolean>(false)
 
   useEffect(() => {
     (async () => {

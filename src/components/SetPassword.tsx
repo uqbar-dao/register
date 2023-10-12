@@ -3,11 +3,12 @@ import type { Identity } from "../App";
 import { useNavigate } from "react-router-dom";
 
 type SetPasswordProps = {
-  confirmedUqName: string
+  confirmedUqName: string,
+  direct: boolean
 }
 
 
-function SetPassword({ confirmedUqName }: SetPasswordProps) {
+function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
   let [password, setPassword] = useState('');
   let [confirmPw, setConfirmPw] = useState('');
   let [error, setError] = useState('');
@@ -27,7 +28,11 @@ function SetPassword({ confirmedUqName }: SetPasswordProps) {
     const result = await fetch('/get-ws-info', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ password, username: confirmedUqName, direct })
+      body: JSON.stringify({ 
+        password, 
+        username: confirmedUqName,
+        direct 
+      })
     })
 
     const interval = setInterval(async () => {
