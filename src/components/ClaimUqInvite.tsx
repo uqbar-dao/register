@@ -3,6 +3,7 @@ import { hooks } from "../connectors/metamask";
 import { UqNFT__factory } from "../abis/types";
 import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
 import { Link, useNavigate } from "react-router-dom";
+import { ipToNumber } from "../utils/ipToNumber"
 import EnterUqName from "./EnterUqName";
 import Loader from "./Loader";
 
@@ -24,6 +25,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
   let provider = useProvider();
   let navigate = useNavigate();
   let [isLoading, setIsLoading] = useState(false);
+  let [loaderMsg, setLoaderMsg] = useState('')
 
   let uqNftAddress = UQ_NFT_ADDRESSES[chainId!];
   let uqNft = UqNFT__factory.connect(uqNftAddress, provider!.getSigner());
@@ -50,19 +52,23 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
   }, [invite])
 
   let [name, setName] = useState('');
-  let [nameValidity, setNameValidity] = useState<string[]>([])
+  let [nameValidities, setNameValidities] = useState<string[]>([])
 
   const [ networkingKey, setNetworkingKey ] = useState<string>("")
   const [ routers, setRouters ] = useState<string[]>([])
-  const [ ipAddress, setIpAddress ] = useState<string>("")
+  const [ ipAddress, setIpAddress ] = useState<number>(0)
   const [ port, setPort ] = useState<number>(0)
+  const [ direct, setDirect ] = useState<boolean>(false)
 
   useEffect(() => {
     (async () => {
       const response = await fetch('/get-ws-info', { method: 'GET'})
       const data = await response.json()
+      console.log("data", data)
       setNetworkingKey(data.networking_key)
       setRouters(data.allowed_routers)
+      setIpAddress(ipToNumber(data.ws_routing[0]))
+      setPort(data.ws_routing[1])
     })()
   }, []);
 
@@ -72,7 +78,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
   let handleRegister = async () => {
 
-    if (nameValidity.length != 0 || inviteValidity != '') return
+    if (nameValidities.length != 0 || inviteValidity != '') return
     if (!name || !invite) {
       window.alert('Please enter a name and invite code')
       return false
@@ -80,6 +86,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     let response
 
+    setLoaderMsg('...Building EIP-4337 User Operation')
     setIsLoading(true);
     
     try {
@@ -101,6 +108,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     } catch (e) {
 
+      setLoaderMsg('')
       setIsLoading(false)
 
       alert(e)
@@ -111,7 +119,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     }
 
-    setIsLoading(false);
+    setLoaderMsg('...Signing EIP-4337 User Operation')
 
     const data = await response.json()
 
@@ -121,8 +129,6 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
     const signature = await signer?.signMessage(uint8Array)
 
     data.userOperation.signature = signature
-
-    setIsLoading(true);
 
     try {
 
@@ -141,6 +147,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     } catch (e) {
 
+      setLoaderMsg('')
       setIsLoading(false);
       alert(e)
       console.error("error from broadcasting userOp:", e);
@@ -148,6 +155,7 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
     }
 
+    setLoaderMsg('')
     setIsLoading(false);
 
     setConfirmedUqName(`${name}.uq`);
@@ -156,10 +164,12 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
 
   }
 
+  const enterUqNameProps = { name, setName, nameValidities, setNameValidities }
+
   return (
     <div id="signup-form" className="col">
     {
-        isLoading? <Loader msg="Registering QNS ID"/> :
+        isLoading? <Loader msg={loaderMsg}/> :
         <>
           <div className="row">
             <h4>Set up your Uqbar node with a .uq name.</h4>
@@ -168,10 +178,12 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
               <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
             </div>
           </div>
+
           <div className="row" style={{margin: "0 0 1em"}}>
               <div style={{fontSize: "0.75em"}}>Address:</div>
               {accounts && <div id="current-address">{accounts[0]}</div>}
-            </div>
+          </div>
+
           <div className="row">
             <input
               value={invite}
@@ -183,14 +195,20 @@ function ClaimUqInvite({ setConfirmedUqName }: ClaimUqNameProps) {
             />
             { inviteValidity != "" && <div className="invite-validity">{inviteValidity}</div> }
           </div>
-          <EnterUqName 
-            name={name} setName={setName} 
-            nameValidities={nameValidity} setNameValidities={setNameValidity} 
-          />
-          <button disabled={nameValidity.length != 0 || inviteValidity != ''} onClick={handleRegister} >
+
+          <EnterUqName { ...enterUqNameProps } />
+
+          <label htmlFor="direct">
+            Register as a direct node (only do this if you are hosting your node somewhere stable)
+          </label>
+          <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+
+          <button disabled={nameValidities.length != 0 || inviteValidity != ''} onClick={handleRegister} >
               Register Uqname
           </button>
+
           <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
+
         </>
       }
     </div>

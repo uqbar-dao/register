@@ -10,9 +10,7 @@ type SetPasswordProps = {
 function SetPassword({ confirmedUqName }: SetPasswordProps) {
   let [password, setPassword] = useState('');
   let [confirmPw, setConfirmPw] = useState('');
-  let [direct, setDirect] = useState(false);
   let [error, setError] = useState('');
-  let navigate = useNavigate();
 
   useEffect(() => {
     setError('')
@@ -74,8 +72,6 @@ function SetPassword({ confirmedUqName }: SetPasswordProps) {
         onChange={(e) => setConfirmPw(e.target.value)}
       />
       <p style={{color: "red"}}>{error}</p>
-      <label htmlFor="direct">Register as a direct node (only do this if you are hosting your node somewhere stable)</label>
-      <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
       <button type="submit">Submit</button>
     </form>
   )

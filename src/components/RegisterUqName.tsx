@@ -30,9 +30,10 @@ function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
   const [nameValidities, setNameValidities] = useState<string[]>([])
 
   const [networkingKey, setNetworkingKey] = useState<string>('')
-  const [ipAddress, setIAddress] = useState<string>('0.0.0.0')
+  const [ipAddress, setIpAddress] = useState<number>(0)
   const [port, setPort] = useState<number>(0)
   const [routers, setRouters] = useState<string[]>([])
+  const [direct, setDirect] = useState<boolean>(false)
 
   useEffect(() => {
     (async () => {
@@ -40,6 +41,8 @@ function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
       const data = await response.json()
       setNetworkingKey(data.networking_key)
       setRouters(data.allowed_routers)
+      setIpAddress(ipToNumber(data.ws_routing[0]))
+      setPort(data.ws_routing[1])
     })()
   }, [])
   
@@ -62,9 +65,9 @@ function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
     const wsTx = await qns.populateTransaction.setWsRecord(
         utils.namehash(`${name}.uq`),
         '0x'+networkingKey,
-        ipToNumber(ipAddress),
-        port,
-        routers.map(x => utils.namehash(x))
+        direct ? ipAddress : 0,
+        direct ? port : 0,
+        !direct ? routers.map(x => utils.namehash(x)) : []
     )
 
     const dnsFormat = toDNSWireFormat(`${name}.uq`);
@@ -99,6 +102,10 @@ function RegisterUqName({ setConfirmedUqName }: RegisterUqNameProps) {
               {accounts && <div id="current-address">{accounts[0]}</div>}
           </div>
           <EnterUqName { ...enterUqNameProps } />
+          <label htmlFor="direct">
+            Register as a direct node (only do this if you are hosting your node somewhere stable)
+          </label>
+          <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
           <button disabled={nameValidities.length != 0} onClick={handleRegister}>
             Register Uqname
           </button>
