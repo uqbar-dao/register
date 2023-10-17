@@ -19,17 +19,16 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-
     if (password !== confirmPw) {
       setError('Passwords do not match');
       return false;
     }
 
     setTimeout(async () => {
-
       const result = await fetch('/boot', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({ 
           password, 
           username: confirmedUqName,
@@ -38,17 +37,13 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
         })
       })
 
-      const byteCharacters = atob(await result.json())
-      const byteNumbers = new Array(byteCharacters.length)
-      for (let i = 0; i < byteCharacters.length; i++)
-        byteNumbers[i] = byteCharacters.charCodeAt(i)
-      
-      const byteArray = new Uint8Array(byteNumbers)
-      const blob = new Blob([byteArray]);
+      const base64String = await result.json()
+
+      let blob = new Blob([base64String], {type: "text/plain;charset=utf-8"});
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${confirmedUqName}.key`)
+      link.setAttribute('download', `${confirmedUqName}.keyfile`)
       document.body.appendChild(link);
       link.click();
 
@@ -61,9 +56,6 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
       }, 2000);
 
     }, 500)
-
-
-
   };
 
   return (
