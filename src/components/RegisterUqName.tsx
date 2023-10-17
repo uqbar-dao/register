@@ -57,9 +57,7 @@ function RegisterUqName({ direct, setDirect, setConfirmedUqName }: RegisterUqNam
   const qns = QNSRegistry__factory.connect(
     QNS_REGISTRY_ADDRESSES[chainId], provider.getSigner());
 
-
   const enterUqNameProps = { name, setName, nameValidities, setNameValidities }
-
 
   let handleRegister = async () => {
 

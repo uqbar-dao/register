@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { hooks } from "../connectors/metamask";
-import { UQ_NFT_ADDRESSES } from "../constants/addresses";
-import { UqNFT__factory } from "../abis/types";
+import { QNS_REGISTRY_ADDRESSES, UQ_NFT_ADDRESSES } from "../constants/addresses";
+import { QNSRegistry__factory, UqNFT__factory } from "../abis/types";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
 import { ipToNumber } from "../utils/ipToNumber";
@@ -32,15 +32,18 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
   const [port, setPort] = useState<number>(0);
   const [routers, setRouters] = useState<string[]>([]);
 
-  const [needKey, setNeedKey] = useState<boolean>(false);
 
   const [name, setName] = useState<string>('');
   const [nameVets, setNameVets] = useState<string[]>([]);
 
+  const [needKey, setNeedKey] = useState<boolean>(false);
   const [key, setKey] = useState<string>('');
+  const [pkMatch, setPkMatch] = useState<boolean>(false);
 
   const [pw, setPw] = useState<string>('');
   const [pw2, setPw2] = useState<string>('');
+  const [pwErr, setPwErr] = useState<string>('');
+  const [pwVet, setPwVet] = useState<string>('');
 
   useEffect(() => {
     (async () => {
@@ -59,7 +62,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
     })()
   }, [])
 
-  const debouncer = useRef<NodeJS.Timeout | null>(null)
+  const nameDebouncer = useRef<NodeJS.Timeout | null>(null)
 
   const NAME_INVALID_PUNY = "Unsupported punycode character"
   const NAME_NOT_OWNER = "Name does not belong to this wallet"
@@ -67,10 +70,10 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
   const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
 
   useEffect(()=> {
-    if (debouncer.current) 
-      clearTimeout(debouncer.current);
+    if (nameDebouncer.current) 
+      clearTimeout(nameDebouncer.current);
 
-    debouncer.current = setTimeout(async () => {
+    nameDebouncer.current = setTimeout(async () => {
 
         if (name == "") {
           setNameVets([])
@@ -124,11 +127,70 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
   }, [name])
 
+  const pwDebouncer = useRef<NodeJS.Timeout | null>(null)
+  useEffect(() => {
+
+    if (pwDebouncer.current) 
+      clearTimeout(pwDebouncer.current);
+
+    pwDebouncer.current = setTimeout(async () => {
+
+      if (pw2 != "" && pw != pw2)
+        setPwErr("Passwords do not match")
+      else {
+        setPwErr("")
+        if (6 <= pw.length) {
+          handlePassword()
+        }
+      }
+
+    }, 500)
+
+  }, [pw, pw2])
+
+  const handlePassword = async () => {
+    try {
+      const response = await fetch('/vet-keyfile', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          keyfile: key,
+          password: pw
+        })
+      })
+      const data = await response.json()
+      console.log("data", data)
+      setPwVet("")
+
+      const wsRecords = await qns.ws(namehash(data.username))
+
+      console.log(wsRecords.publicKey === '0x' + data.networking_key)
+      setPkMatch(wsRecords.publicKey === '0x' + data.networking_key)
+
+      console.log("ws records", wsRecords.publicKey)
+
+    } catch {
+      setPwVet("Password is incorrect")
+    }
+  }
+
+  const handleKeyfile = async (e: any) => {
+    e.preventDefault()
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onloadend = () => setKey(reader.result as string)
+    reader.readAsText(file)
+  }
+
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
-  let uqNftAddress = UQ_NFT_ADDRESSES[chainId];
-  let uqNft = UqNFT__factory.connect(uqNftAddress, provider.getSigner());
+  const uqNft = UqNFT__factory
+    .connect(UQ_NFT_ADDRESSES[chainId], provider.getSigner());
+  const qns = QNSRegistry__factory
+    .connect(QNS_REGISTRY_ADDRESSES[chainId], provider.getSigner());
+
 
   return (
     <div id="signup-form" className="col">
@@ -155,6 +217,50 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         />
         <div className="uq">.uq</div>
         { nameVets.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
+      </div>
+      <div className="row">
+        {
+          needKey
+            ? <div> 
+                Upload Keyfile
+                <input type="file" onChange={handleKeyfile} />
+            </div>
+            : <div> has key </div>
+        }
+      </div>
+      <div className="row">
+        <div className="row label-row">
+          <label htmlFor="confirm-password">Confirm Password</label>
+        </div>
+        <input
+          type="password"
+          id="password"
+          required
+          minLength={6}
+          name="password"
+          placeholder="Min 6 characters"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+        />
+      </div>
+      <div className="row">
+        <div className="row label-row">
+          <label htmlFor="confirm-password">Confirm Password</label>
+        </div>
+        <input
+          type="password"
+          id="confirm-password"
+          required minLength={6}
+          name="confirm-password"
+          placeholder="Min 6 characters"
+          value={pw2}
+          onChange={(e) => setPw2(e.target.value)}
+        />
+      </div>
+      <div className="row">
+        <p style={{color: "red"}}>{pwErr}</p>
+        <p style={{color: "red"}}>{pwVet}</p>
+        <button onClick={handlePassword}>Submit</button>
       </div>
     </div>
   )
