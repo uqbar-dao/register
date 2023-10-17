@@ -38,7 +38,7 @@ function RegisterUqName({ direct, setDirect, setConfirmedUqName }: RegisterUqNam
 
   useEffect(() => {
     (async () => {
-      const response = await fetch('/get-ws-info', { method: 'GET'})
+      const response = await fetch('/info', { method: 'GET'})
       const data = await response.json()
       setNetworkingKey(data.networking_key)
       setRouters(data.allowed_routers)

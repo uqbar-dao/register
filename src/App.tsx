@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { hooks } from "./connectors/metamask";
 import {
@@ -9,7 +9,7 @@ import ConnectWallet from "./components/ConnectWallet";
 import RegisterUqName from "./components/RegisterUqName";
 import ClaimUqInvite from "./components/ClaimUqInvite";
 import SetPassword from "./components/SetPassword";
-import Reset from './components/Reset'
+import Login from './components/Login'
 import UqHome from "./components/UqHome"
 
 export type Identity = {
@@ -25,28 +25,28 @@ const {
 } = hooks;
 
 function App() {
-  let chainId = useChainId();
-  let provider = useProvider();
-  let [confirmedUqName, setConfirmedUqName] = useState('');
-  let [direct, setDirect] = useState<boolean>(false)
+  const chainId = useChainId();
+  const provider = useProvider();
+  
+  const [direct, setDirect] = useState<boolean>(false);
+  const [confirmedUqName, setConfirmedUqName] = useState<string>('');
+  const [needKey, setNeedKey] = useState<boolean>(false);
 
   const props = { direct, setDirect, setConfirmedUqName }
-  const registerUqElement = <RegisterUqName direct={direct} setDirect={setDirect} setConfirmedUqName={setConfirmedUqName} />
 
   return (
     <>
       {
-        !chainId?  <ConnectWallet /> :
-        !provider? <ConnectWallet /> :
-        !(chainId in QNS_REGISTRY_ADDRESSES)? <p>change networks</p> : // TODO automatic prompt to switch to sepolia
-        !(chainId in UQ_NFT_ADDRESSES)?       <p>change networks</p> :
+        !chainId || !provider ?  <ConnectWallet /> :
+        !(chainId in QNS_REGISTRY_ADDRESSES) || !(chainId in UQ_NFT_ADDRESSES) 
+          ? <p>change networks</p> : // TODO automatic prompt to switch to sepolia
         <Router>
           <Routes>
-            <Route path="/" element={<UqHome/>} />
-            <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
+            <Route path="/" element={<UqHome {...{needKey, setNeedKey}} />} />
+            <Route path="/login" element={<Login { ...{needKey, ...props}}/>} />
             <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
-            <Route path="/set-password" element={<SetPassword direct={direct} confirmedUqName={confirmedUqName}/>} />
-            <Route path="/reset" element={<Reset setConfirmedUqName={setConfirmedUqName}/>} />
+            <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
+            <Route path="/set-password" element={<SetPassword {...{direct, confirmedUqName}}/>} />
           </Routes>
         </Router>
       }

@@ -25,23 +25,44 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
       return false;
     }
 
-    const result = await fetch('/get-ws-info', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        password, 
-        username: confirmedUqName,
-        direct 
-      })
-    })
+    setTimeout(async () => {
 
-    const interval = setInterval(async () => {
-      const homepageResult = await fetch('/') 
-      if (homepageResult.status < 400) {
-        clearInterval(interval)
-        window.location.replace('/')
-      }
-    }, 2000);
+      const result = await fetch('/boot', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          password, 
+          username: confirmedUqName,
+          direct,
+          keyfile: ""
+        })
+      })
+
+      const byteCharacters = atob(await result.json())
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++)
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray]);
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${confirmedUqName}.key`)
+      document.body.appendChild(link);
+      link.click();
+
+      const interval = setInterval(async () => {
+        const homepageResult = await fetch('/') 
+        if (homepageResult.status < 400) {
+          clearInterval(interval)
+          window.location.replace('/')
+        }
+      }, 2000);
+
+    }, 500)
+
+
 
   };
 

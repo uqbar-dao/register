@@ -63,7 +63,7 @@ function ClaimUqInvite({ direct, setDirect, setConfirmedUqName }: ClaimUqNamePro
 
   useEffect(() => {
     (async () => {
-      const response = await fetch('/get-ws-info', { method: 'GET'})
+      const response = await fetch('/info', { method: 'GET'})
       const data = await response.json()
       console.log("data", data)
       setNetworkingKey(data.networking_key)

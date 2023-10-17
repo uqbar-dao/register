@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { hooks } from "../connectors/metamask";
 import { UqNFT__factory } from "../abis/types";
 import {
@@ -13,23 +13,34 @@ const {
   useProvider,
 } = hooks;
 
-type ClaimUqNameProps = {
+type LoginProps = {
+  needKey: boolean,
+  direct: boolean,
+  setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-
-function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
+function Login({ direct, setDirect, needKey, setConfirmedUqName }: LoginProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
   let navigate = useNavigate();
-  let [name, setName] = useState('');
+
+  let [name, setName] = useState<string>('');
+  let [key, setKey] = useState<string>('');
+  let [pw, setPw] = useState<string>('');
+  let [pw2, setPw2] = useState<string>('');
+
+  useEffect(()=> {
+
+  }, [name])
 
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
   let uqNftAddress = UQ_NFT_ADDRESSES[chainId];
   let uqNft = UqNFT__factory.connect(uqNftAddress, provider.getSigner());
+
 
   let checkUqName = async () => {
     if (!name) {
@@ -84,4 +95,4 @@ function ClaimUqName({ setConfirmedUqName }: ClaimUqNameProps) {
   )
 }
 
-export default ClaimUqName;
+export default Login;
