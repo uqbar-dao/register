@@ -1,11 +1,13 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { hooks } from "../connectors/metamask";
+import { UQ_NFT_ADDRESSES } from "../constants/addresses";
 import { UqNFT__factory } from "../abis/types";
-import {
-  UQ_NFT_ADDRESSES,
-} from "../constants/addresses";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
+import { ipToNumber } from "../utils/ipToNumber";
+import { toAscii } from 'idna-uts46-hx'
+import { hash } from 'eth-ens-namehash'
+import isValidDomain from 'is-valid-domain'
 
 const {
   useChainId,
@@ -14,24 +16,111 @@ const {
 } = hooks;
 
 type LoginProps = {
-  needKey: boolean,
   direct: boolean,
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-function Login({ direct, setDirect, needKey, setConfirmedUqName }: LoginProps) {
-  let chainId = useChainId();
-  let accounts = useAccounts();
-  let provider = useProvider();
-  let navigate = useNavigate();
+function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
+  const chainId = useChainId();
+  const accounts = useAccounts();
+  const provider = useProvider();
+  const navigate = useNavigate();
 
-  let [name, setName] = useState<string>('');
-  let [key, setKey] = useState<string>('');
-  let [pw, setPw] = useState<string>('');
-  let [pw2, setPw2] = useState<string>('');
+  const [networkingKey, setNetworkingKey] = useState<string>('');
+  const [ipAddr, setIpAddr] = useState<number>(0);
+  const [port, setPort] = useState<number>(0);
+  const [routers, setRouters] = useState<string[]>([]);
+
+  const [needKey, setNeedKey] = useState<boolean>(false);
+
+  const [name, setName] = useState<string>('');
+  const [nameVets, setNameVets] = useState<string[]>([]);
+
+  const [key, setKey] = useState<string>('');
+
+  const [pw, setPw] = useState<string>('');
+  const [pw2, setPw2] = useState<string>('');
+
+  useEffect(() => {
+    (async () => {
+
+      let response = await fetch('/info', { method: 'GET' })
+      let data = await response.json()
+      setNetworkingKey(data.networking_key)
+      setRouters(data.allowed_routers)
+      setIpAddr(ipToNumber(data.ws_routing[0]))
+      setPort(data.ws_routing[1])
+
+      response = await fetch('/has-keyfile', { method: 'GET'})
+      data = await response.json()
+      setNeedKey(data)
+
+    })()
+  }, [])
+
+  const debouncer = useRef<NodeJS.Timeout | null>(null)
+
+  const NAME_INVALID_PUNY = "Unsupported punycode character"
+  const NAME_NOT_OWNER = "Name does not belong to this wallet"
+  const NAME_NOT_REGISTERED = "Name is not registered"
+  const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
 
   useEffect(()=> {
+    if (debouncer.current) 
+      clearTimeout(debouncer.current);
+
+    debouncer.current = setTimeout(async () => {
+
+        if (name == "") {
+          setNameVets([])
+          return;
+        }
+
+        let index: number
+        let vets = [...nameVets]
+
+        let normalized: string
+        index = vets.indexOf(NAME_INVALID_PUNY)
+        try {
+          normalized = toAscii(name + ".uq")
+          if (index != -1) vets.splice(index, 1)
+        } catch (e) {
+          if (index == -1) vets.push(NAME_INVALID_PUNY)
+        }
+
+        // only check if name is valid punycode
+        if (normalized! !== undefined) {
+
+          index = vets.indexOf(NAME_URL)
+          if (name != "" && !isValidDomain(normalized)) {
+            if (index == -1) vets.push(NAME_URL)
+          } else if (index != -1) vets.splice(index, 1)
+
+          try {
+
+            const owner = await uqNft.ownerOf(hash(normalized))
+
+            index = vets.indexOf(NAME_NOT_OWNER)
+            if (owner == accounts![0] && index != -1) 
+              vets.splice(index, 1);
+            else if (index == -1 && owner != accounts![0])
+              vets.push(NAME_NOT_OWNER);
+
+            index = vets.indexOf(NAME_NOT_REGISTERED)
+            if (index != -1) vets.splice(index, 1)
+
+          } catch {
+
+            index = vets.indexOf(NAME_NOT_REGISTERED)
+            if (index == -1) vets.push(NAME_NOT_REGISTERED)
+
+          }
+        }
+
+        setNameVets(vets)
+
+    }, 500)
 
   }, [name])
 
@@ -40,28 +129,6 @@ function Login({ direct, setDirect, needKey, setConfirmedUqName }: LoginProps) {
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
   let uqNftAddress = UQ_NFT_ADDRESSES[chainId];
   let uqNft = UqNFT__factory.connect(uqNftAddress, provider.getSigner());
-
-
-  let checkUqName = async () => {
-    if (!name) {
-      window.alert('Please enter a name')
-      return false
-    }
-
-    const nodeId = namehash((`${name}.uq`));
-
-    try {
-      let owner = await uqNft.ownerOf(nodeId)
-      if (owner == accounts![0]) {
-        setConfirmedUqName(`${name}.uq`);
-        navigate("/set-password");
-      } else {
-        window.alert('You do not own this .uq name. Please try again.')
-      }
-    } catch {
-      window.alert('This .uq name is not registered. Please try again.')
-    }
-  }
 
   return (
     <div id="signup-form" className="col">
@@ -87,10 +154,8 @@ function Login({ direct, setDirect, needKey, setConfirmedUqName }: LoginProps) {
           placeholder="e.g. myname"
         />
         <div className="uq">.uq</div>
+        { nameVets.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
       </div>
-      <button
-        onClick={checkUqName}
-      >Confirm Ownership of Uqname</button>
     </div>
   )
 }

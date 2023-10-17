@@ -30,7 +30,6 @@ function App() {
   
   const [direct, setDirect] = useState<boolean>(false);
   const [confirmedUqName, setConfirmedUqName] = useState<string>('');
-  const [needKey, setNeedKey] = useState<boolean>(false);
 
   const props = { direct, setDirect, setConfirmedUqName }
 
@@ -42,8 +41,8 @@ function App() {
           ? <p>change networks</p> : // TODO automatic prompt to switch to sepolia
         <Router>
           <Routes>
-            <Route path="/" element={<UqHome {...{needKey, setNeedKey}} />} />
-            <Route path="/login" element={<Login { ...{needKey, ...props}}/>} />
+            <Route path="/" element={<UqHome/>} />
+            <Route path="/login" element={<Login {...props}/>} />
             <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
             <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
             <Route path="/set-password" element={<SetPassword {...{direct, confirmedUqName}}/>} />
