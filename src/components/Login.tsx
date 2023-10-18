@@ -37,6 +37,8 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
   const [needKey, setNeedKey] = useState<boolean>(false);
   const [key, setKey] = useState<string>('');
+  const [keyName, setKeyName] = useState<string>('');
+  const [keyNetKey, setKeyNetKey] = useState<string>('');
   const [keyErrs, setKeyErrs] = useState<string[]>([]);
 
   const [pw, setPw] = useState<string>('');
@@ -82,6 +84,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
         let index: number
         let vets = [...nameVets]
+        const kErrs = [...keyErrs]
 
         let normalized: string
         index = vets.indexOf(NAME_INVALID_PUNY)
@@ -90,6 +93,11 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
           if (index != -1) vets.splice(index, 1)
         } catch (e) {
           if (index == -1) vets.push(NAME_INVALID_PUNY)
+        }
+
+        if (keyName != '' && keyErrs.indexOf(KEY_DIFFERENT_USERNAME) != -1) {
+          kErrs.splice(kErrs.indexOf(KEY_DIFFERENT_USERNAME), 1);
+          setKeyErrs(kErrs);
         }
 
         // only check if name is valid punycode
@@ -112,6 +120,16 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
             index = vets.indexOf(NAME_NOT_REGISTERED)
             if (index != -1) vets.splice(index, 1)
+
+            const wsRecords = await qns.ws(namehash(normalized))
+            if (keyNetKey != '') {
+              index = kErrs.indexOf(KEY_WRONG_NET_KEY)
+              if (keyNetKey != wsRecords.publicKey && index == -1)
+                kErrs.push(KEY_WRONG_NET_KEY)
+              else 
+                kErrs.splice(index, 1)
+              setKeyErrs(kErrs)
+            }
 
           } catch {
 
@@ -167,13 +185,17 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
       const data = await response.json()
 
+      setKeyName(data.username)
+
       const errs = [...keyErrs]
 
-      const wsRecords = await qns.ws(namehash(data.username))
       let index = errs.indexOf(KEY_DIFFERENT_USERNAME)
       if (data.username != `${name}.uq`) {
         if (index == -1) errs.push(KEY_DIFFERENT_USERNAME)
       } else if (index != -1) errs.splice(index, 1)
+
+      const wsRecords = await qns.ws(namehash(data.username))
+      setKeyNetKey(wsRecords.publicKey)
 
       index = errs.indexOf(KEY_WRONG_NET_KEY)
       if (wsRecords.publicKey != '0x' + data.networking_key) {
@@ -269,12 +291,14 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         {
           needKey
             ? <div> 
-                Upload Keyfile
-                <input type="file" onChange={handleKeyfile} />
-            </div>
+                <div className="row">
+                  Upload Keyfile
+                  <input type="file" onChange={handleKeyfile} />
+                </div>
+              { keyErrs.map((x,i) => <div className="row"><br/><span key={i} className="key-err">{x}</span></div>) }
+              </div>
             : <div> has key </div>
         }
-        { keyErrs.map((x,i) => <div><br/><span key={i} className="key-err">{x}</span></div>) }
       </div>
       <div className="row">
         <div className="row label-row">
