@@ -57,6 +57,9 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
       response = await fetch('/has-keyfile', { method: 'GET'})
       data = await response.json()
+
+      console.log("response", data)
+
       setNeedKey(data)
 
     })()
@@ -158,16 +161,14 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
           password: pw
         })
       })
-      const data = await response.json()
-      console.log("data", data)
+
       setPwVet("")
+
+      const data = await response.json()
 
       const wsRecords = await qns.ws(namehash(data.username))
 
-      console.log(wsRecords.publicKey === '0x' + data.networking_key)
       setPkMatch(wsRecords.publicKey === '0x' + data.networking_key)
-
-      console.log("ws records", wsRecords.publicKey)
 
     } catch {
       setPwVet("Password is incorrect")
@@ -182,6 +183,40 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
     reader.onloadend = () => setKey(reader.result as string)
     reader.readAsText(file)
   }
+
+  const handleLogin = async () => {
+
+      const response = await fetch('/boot', { 
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          keyfile: key,
+          password: pw,
+          username: `${name}.uq`,
+          direct
+        })
+      })
+
+      if (!needKey) {
+        const base64Keyfile = await response.json()
+        let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${name}.uq.keyfile`)
+        document.body.appendChild(link);
+        link.click();
+      }
+
+      const interval = setInterval(async () => {
+        const homepageResult = await fetch('/') 
+        if (homepageResult.status < 400) {
+          clearInterval(interval)
+          window.location.replace('/')
+        }
+      }, 2000);
+
+  };
 
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
@@ -230,7 +265,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       </div>
       <div className="row">
         <div className="row label-row">
-          <label htmlFor="confirm-password">Confirm Password</label>
+          <label htmlFor="confirm-password">Enter Password</label>
         </div>
         <input
           type="password"
@@ -260,7 +295,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       <div className="row">
         <p style={{color: "red"}}>{pwErr}</p>
         <p style={{color: "red"}}>{pwVet}</p>
-        <button onClick={handlePassword}>Submit</button>
+        <button onClick={handleLogin}>Submit</button>
       </div>
     </div>
   )
