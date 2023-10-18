@@ -9,6 +9,8 @@ import { toAscii } from 'idna-uts46-hx'
 import { hash } from 'eth-ens-namehash'
 import isValidDomain from 'is-valid-domain'
 
+import { hexlify, randomBytes } from "ethers/lib/utils";
+
 const {
   useChainId,
   useAccounts,
@@ -35,11 +37,17 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
   const [name, setName] = useState<string>('');
   const [nameVets, setNameVets] = useState<string[]>([]);
 
+  const [newKey, setNewKey] = useState<boolean>(false)
   const [needKey, setNeedKey] = useState<boolean>(false);
   const [key, setKey] = useState<string>('');
+  const [keyFileName, setKeyFileName] = useState<string>('');
   const [keyName, setKeyName] = useState<string>('');
   const [keyNetKey, setKeyNetKey] = useState<string>('');
   const [keyErrs, setKeyErrs] = useState<string[]>([]);
+
+  const [wsErrs, setWsErrs] = useState<string[]>([]);
+
+  const [aprioriDirect, setAprioriDirect] = useState<boolean>(false);
 
   const [pw, setPw] = useState<string>('');
   const [pw2, setPw2] = useState<string>('');
@@ -56,9 +64,18 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       setIpAddr(ipToNumber(data.ws_routing[0]))
       setPort(data.ws_routing[1])
 
+      // await qns.setWsRecord(
+      //   namehash("trebuchet.uq"),
+      //   hexlify(randomBytes(32)),
+      //   1,
+      //   1,
+      //   []
+      // )
+
       response = await fetch('/has-keyfile', { method: 'GET'})
       data = await response.json()
 
+      setNewKey(data)
       setNeedKey(data)
 
     })()
@@ -128,7 +145,18 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
               index = kErrs.indexOf(KEY_WRONG_NET_KEY)
               if (keyNetKey != wsRecords.publicKey) {
                 if (index == -1) kErrs.push(KEY_WRONG_NET_KEY)
-              } else if (index != -1) kErrs.splice(index, 1)
+              } else if (index != -1) {
+                kErrs.splice(index, 1)
+
+                if (wsRecords.ip == 0) {
+                  setAprioriDirect(false)
+                  setDirect(false)
+                } else {
+                  setAprioriDirect(true)
+                  setDirect(true)
+                }
+
+              }
             }
 
           } catch {
@@ -196,12 +224,13 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       } else if (index != -1) errs.splice(index, 1)
 
       const wsRecords = await qns.ws(namehash(data.username))
-      setKeyNetKey(wsRecords.publicKey)
+      setKeyNetKey(`0x${data.networking_key}`)
 
       index = errs.indexOf(KEY_WRONG_NET_KEY)
       if (wsRecords.publicKey != '0x' + data.networking_key) {
         if (index == -1) errs.push(KEY_WRONG_NET_KEY)
       } else if (index != -1) errs.splice(index, 1)
+
 
       setKeyErrs(errs)
 
@@ -215,8 +244,18 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
     const file = e.target.files[0]
     if (!file) return
     const reader = new FileReader()
-    reader.onloadend = () => setKey(reader.result as string)
+    reader.onloadend = () => {
+      setKeyFileName(file.name)
+      setKey(reader.result as string)
+    }
     reader.readAsText(file)
+  }
+
+  const keyfileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleKeyUploadClick = async (e: any) => {
+    e.preventDefault()
+    keyfileInputRef.current?.click()
   }
 
   const handleLogin = async () => {
@@ -261,49 +300,72 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
   const qns = QNSRegistry__factory
     .connect(QNS_REGISTRY_ADDRESSES[chainId], provider.getSigner());
 
+  const flipNewKey = () => setNewKey(needKey || !newKey)
 
   return (
     <div id="signup-form" className="col">
-      <div className="row">
-        <h4>What is your .uq name?</h4>
+
+      <div className="row" style={{margin: "0 0 1em"}}>
+        <div style={{fontSize: "0.75em"}}>Address:</div>
+        {accounts && <div id="current-address">{accounts[0]}</div>}
+      </div>
+
+      <div className="login-row row">
+        1. Enter .Uq Name
         <div className="tooltip-container">
           <div className="tooltip-button">&#8505;</div>
           <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
         </div>
       </div>
-      <div className="row" style={{margin: "0 0 1em"}}>
-          <div style={{fontSize: "0.75em"}}>Address:</div>
-          {accounts && <div id="current-address">{accounts[0]}</div>}
+
+      <div className="col">
+        <div style={{display:'flex', alignItems:'center'}}>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            type="text"
+            minLength={9}
+            required
+            name="uq-name"
+            placeholder="e.g. myname"
+          />
+          .uq
         </div>
-      <div className="row">
-        <input
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          type="text"
-          minLength={9}
-          required
-          name="uq-name"
-          placeholder="e.g. myname"
-        />
-        <div className="uq">.uq</div>
-        { nameVets.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
+        { nameVets.map((x,i) => <span key={i} className="name-err">{x}</span>) }
       </div>
-      <div className="row">
-        {
-          needKey
-            ? <div> 
-                <div className="row">
-                  Upload Keyfile
-                  <input type="file" onChange={handleKeyfile} />
-                </div>
-              { keyErrs.map((x,i) => <div className="row"><br/><span key={i} className="key-err">{x}</span></div>) }
-              </div>
-            : <div> has key </div>
-        }
+
+      <div className="login-row row">
+        2. Choose Keyfile
+        <br/>
       </div>
+
+      <div className="row" style={{margin: ".5em", opacity: needKey ? .5 : 1}}> 
+        <label> 
+          <input disabled={needKey} type="checkbox" checked={!newKey} onChange={flipNewKey} />
+          { needKey ? "No" : "Use" } Existing Keyfile 
+        </label>
+      </div>
+
+      <div style={{margin: ".5em", display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', opacity: newKey ?  1 : .5}}>
+        <div className="row"> 
+          <label>
+            <input type="checkbox" checked={newKey} onChange={flipNewKey} />
+            Upload Keyfile
+          </label>
+        </div>
+        <p style={{opacity: !keyFileName ? .5 : 1 }}> { keyFileName ? keyFileName : ".keyfile"} </p>
+        <button style={{width: "50%", fontSize: "65%" }} onClick={handleKeyUploadClick}> Upload </button>
+        <input ref={keyfileInputRef} style={{display:"none"}} type="file" onChange={handleKeyfile} />
+      </div>
+
+      <div className="login-row row">
+        3. Enter Password
+        <br/>
+      </div>
+
       <div className="row">
         <div className="row label-row">
-          <label htmlFor="confirm-password">Enter Password</label>
+          <label htmlFor="password">Enter Password</label>
         </div>
         <input
           type="password"
@@ -316,6 +378,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
           onChange={(e) => setPw(e.target.value)}
         />
       </div>
+
       <div className="row">
         <div className="row label-row">
           <label htmlFor="confirm-password">Confirm Password</label>
@@ -331,11 +394,19 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         />
       </div>
 
-      <div className="row">
-        <p style={{color: "red"}}>{pwErr}</p>
-        <p style={{color: "red"}}>{pwVet}</p>
-        <button onClick={handleLogin}>Submit</button>
+      { pwErr ??  <div className="row"> <p style={{color:"red"}}> {pwErr}</p> </div> }
+      { pwVet ??  <div className="row"> <p style={{color:"red"}}> {pwVet}</p> </div> }
+
+      <div className="login-row row">
+        4. Overview
       </div>
+
+      <div className="col">
+        { keyErrs.map((x,i) => <span key={i} className="key-err">{x}</span>) }
+      </div>
+
+      <button onClick={handleLogin}>Submit</button>
+
     </div>
   )
 }
