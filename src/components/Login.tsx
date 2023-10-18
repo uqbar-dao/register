@@ -95,13 +95,15 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
           if (index == -1) vets.push(NAME_INVALID_PUNY)
         }
 
-        if (keyName != '' && keyErrs.indexOf(KEY_DIFFERENT_USERNAME) != -1) {
-          kErrs.splice(kErrs.indexOf(KEY_DIFFERENT_USERNAME), 1);
-          setKeyErrs(kErrs);
-        }
-
         // only check if name is valid punycode
         if (normalized! !== undefined) {
+
+          if (keyName != '') {
+            index = kErrs.indexOf(KEY_DIFFERENT_USERNAME)
+            if (keyName != normalized) {
+              if (index == -1) kErrs.push(KEY_DIFFERENT_USERNAME)
+            } else if (index != -1) kErrs.splice(index, 1)
+          } 
 
           index = vets.indexOf(NAME_URL)
           if (name != "" && !isValidDomain(normalized)) {
@@ -124,11 +126,9 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
             const wsRecords = await qns.ws(namehash(normalized))
             if (keyNetKey != '') {
               index = kErrs.indexOf(KEY_WRONG_NET_KEY)
-              if (keyNetKey != wsRecords.publicKey && index == -1)
-                kErrs.push(KEY_WRONG_NET_KEY)
-              else 
-                kErrs.splice(index, 1)
-              setKeyErrs(kErrs)
+              if (keyNetKey != wsRecords.publicKey) {
+                if (index == -1) kErrs.push(KEY_WRONG_NET_KEY)
+              } else if (index != -1) kErrs.splice(index, 1)
             }
 
           } catch {
@@ -140,6 +140,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         }
 
         setNameVets(vets)
+        setKeyErrs(kErrs)
 
     }, 500)
 
