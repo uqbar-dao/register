@@ -32,13 +32,12 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
   const [port, setPort] = useState<number>(0);
   const [routers, setRouters] = useState<string[]>([]);
 
-
   const [name, setName] = useState<string>('');
   const [nameVets, setNameVets] = useState<string[]>([]);
 
   const [needKey, setNeedKey] = useState<boolean>(false);
   const [key, setKey] = useState<string>('');
-  const [pkMatch, setPkMatch] = useState<boolean>(false);
+  const [keyErrs, setKeyErrs] = useState<string[]>([]);
 
   const [pw, setPw] = useState<string>('');
   const [pw2, setPw2] = useState<string>('');
@@ -57,8 +56,6 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
       response = await fetch('/has-keyfile', { method: 'GET'})
       data = await response.json()
-
-      console.log("response", data)
 
       setNeedKey(data)
 
@@ -151,6 +148,10 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
   }, [pw, pw2])
 
+  const KEY_DIFFERENT_USERNAME = "Keyfile does not match username"
+  const KEY_WRONG_NET_KEY = "Keyfile does not match public key"
+  const WS_WRONG_IP = "IP Address does not match"
+
   const handlePassword = async () => {
     try {
       const response = await fetch('/vet-keyfile', { 
@@ -166,9 +167,20 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
       const data = await response.json()
 
-      const wsRecords = await qns.ws(namehash(data.username))
+      const errs = [...keyErrs]
 
-      setPkMatch(wsRecords.publicKey === '0x' + data.networking_key)
+      const wsRecords = await qns.ws(namehash(data.username))
+      let index = errs.indexOf(KEY_DIFFERENT_USERNAME)
+      if (data.username != `${name}.uq`) {
+        if (index == -1) errs.push(KEY_DIFFERENT_USERNAME)
+      } else if (index != -1) errs.splice(index, 1)
+
+      index = errs.indexOf(KEY_WRONG_NET_KEY)
+      if (wsRecords.publicKey != '0x' + data.networking_key) {
+        if (index == -1) errs.push(KEY_WRONG_NET_KEY)
+      } else if (index != -1) errs.splice(index, 1)
+
+      setKeyErrs(errs)
 
     } catch {
       setPwVet("Password is incorrect")
@@ -262,6 +274,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
             </div>
             : <div> has key </div>
         }
+        { keyErrs.map((x,i) => <div><br/><span key={i} className="key-err">{x}</span></div>) }
       </div>
       <div className="row">
         <div className="row label-row">
@@ -292,6 +305,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
           onChange={(e) => setPw2(e.target.value)}
         />
       </div>
+
       <div className="row">
         <p style={{color: "red"}}>{pwErr}</p>
         <p style={{color: "red"}}>{pwVet}</p>
