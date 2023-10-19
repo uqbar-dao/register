@@ -5,21 +5,21 @@ import { useNavigate } from "react-router-dom";
 type SetPasswordProps = {
   confirmedUqName: string,
   direct: boolean
+  pw: string,
+  setPw: React.Dispatch<React.SetStateAction<string>>,
 }
 
-
-function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
-  let [password, setPassword] = useState('');
-  let [confirmPw, setConfirmPw] = useState('');
+function SetPassword({ confirmedUqName, direct, pw, setPw }: SetPasswordProps) {
+  let [pw2, setPw2] = useState('');
   let [error, setError] = useState('');
 
   useEffect(() => {
     setError('')
-  }, [password, confirmPw])
+  }, [pw, pw2])
 
   const handleSubmit = async (e: any) => {
     e.preventDefault();
-    if (password !== confirmPw) {
+    if (pw !== pw2) {
       setError('Passwords do not match');
       return false;
     }
@@ -30,7 +30,7 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({ 
-          password, 
+          password: pw, 
           reset: false,
           username: confirmedUqName,
           direct,
@@ -75,8 +75,8 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
         minLength={6}
         name="password"
         placeholder="Min 6 characters"
-        value={password}
-        onChange={(e) => setPassword(e.target.value)}
+        value={pw}
+        onChange={(e) => setPw(e.target.value)}
       />
       <div className="row label-row">
         <label htmlFor="confirm-password">Confirm Password</label>
@@ -87,8 +87,8 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
         required minLength={6}
         name="confirm-password"
         placeholder="Min 6 characters"
-        value={confirmPw}
-        onChange={(e) => setConfirmPw(e.target.value)}
+        value={pw2}
+        onChange={(e) => setPw2(e.target.value)}
       />
       <p style={{color: "red"}}>{error}</p>
       <button type="submit">Submit</button>

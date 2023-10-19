@@ -29,10 +29,13 @@ function App() {
   const chainId = useChainId();
   const provider = useProvider();
   
+  const [pw, setPw] = useState<string>('');
+  const [key, setKey] = useState<string>('');
   const [direct, setDirect] = useState<boolean>(false);
   const [confirmedUqName, setConfirmedUqName] = useState<string>('');
 
-  const props = { direct, setDirect, setConfirmedUqName }
+  // just pass all the props each time since components won't mind extras
+  const props = { pw, setPw, key, setKey, direct, setDirect, setConfirmedUqName, confirmedUqName }
 
   return (
     <>
@@ -47,7 +50,7 @@ function App() {
             <Route path="/reset" element={<Reset {...props}/>} />
             <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
             <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
-            <Route path="/set-password" element={<SetPassword {...{direct, confirmedUqName}}/>} />
+            <Route path="/set-password" element={<SetPassword {...props}/>} />
           </Routes>
         </Router>
       }

@@ -128,7 +128,6 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       const errs = [...keyErrs]
 
       const ws = await qns.ws(namehash(data.username))
-      setKeyNetKey(`0x${data.networking_key}`)
 
       let index = errs.indexOf(KEY_WRONG_NET_KEY)
       if (ws.publicKey != '0x' + data.networking_key) {
