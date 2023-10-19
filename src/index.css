@@ -94,8 +94,17 @@ button:hover {
   max-width: calc(100vw - 4em);
 }
 
+.key-err {
+  font-size: 12px;
+  margin: 1em;
+}
+
 label {
   font-size: 0.75em;
+}
+
+.login-row {
+  margin: 1em;
 }
 
 .label-row {

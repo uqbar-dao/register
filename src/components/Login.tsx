@@ -18,44 +18,39 @@ const {
   useProvider,
 } = hooks;
 
-type ResetProps = {
+type LoginProps = {
   direct: boolean,
-  key: string,
-  keyFileName: string,
   pw: string,
-  reset: boolean,
   uqName: string,
-  setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setReset: React.Dispatch<React.SetStateAction<boolean>>,
+  setDirect: React.Dispatch<React.SetStateAction<boolean>>, 
   setPw: React.Dispatch<React.SetStateAction<string>>,
-  setUqName: React.Dispatch<React.SetStateAction<string>>
+  setUqName: React.Dispatch<React.SetStateAction<string>>,
 }
 
-function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setUqName }: ResetProps) {
+function Login({ direct, pw, uqName, setDirect, setPw, setUqName }: LoginProps) {
   const chainId = useChainId();
-  const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
 
-  const [networkingKey, setNetworkingKey] = useState<string>('');
   const [ipAddr, setIpAddr] = useState<number>(0);
   const [port, setPort] = useState<number>(0);
   const [routers, setRouters] = useState<string[]>([]);
 
-  const [name, setName] = useState<string>(uqName.slice(0,-3));
-  const [nameVets, setNameVets] = useState<string[]>([]);
-
   const [uploadKey, setUploadKey] = useState<boolean>(false)
   const [needKey, setNeedKey] = useState<boolean>(false);
+  const [localKey, setLocalKey] = useState<string>('');
+  const [localKeyFileName, setLocalKeyFileName] = useState<string>('');
+  const [keyErrs, setKeyErrs] = useState<string[]>([]);
 
-  const [loading, setLoading] = useState<boolean>(false);
+  const [pw2, setPw2] = useState<string>('');
+  const [pwErr, setPwErr] = useState<string>('');
+  const [pwVet, setPwVet] = useState<string>('');
 
   useEffect(() => {
     (async () => {
 
       let response = await fetch('/info', { method: 'GET' })
       let data = await response.json()
-      setNetworkingKey(data.networking_key)
       setRouters(data.allowed_routers)
       setIpAddr(ipToNumber(data.ws_routing[0]))
       setPort(data.ws_routing[1])
@@ -69,133 +64,138 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
     })()
   }, [])
 
-  const nameDebouncer = useRef<NodeJS.Timeout | null>(null)
+  const pwDebouncer = useRef<NodeJS.Timeout | null>(null)
+  useEffect(() => {
 
-  const NAME_INVALID_PUNY = "Unsupported punycode character"
-  const NAME_NOT_OWNER = "Name does not belong to this wallet"
-  const NAME_NOT_REGISTERED = "Name is not registered"
-  const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
+    if (pwDebouncer.current) 
+      clearTimeout(pwDebouncer.current);
 
-  useEffect(()=> {
-    if (nameDebouncer.current) 
-      clearTimeout(nameDebouncer.current);
-
-    nameDebouncer.current = setTimeout(async () => {
-
-
-        if (name == "") { setNameVets([]); return; }
-
-        let index: number
-        let vets = [...nameVets]
-
-        let normalized: string
-        index = vets.indexOf(NAME_INVALID_PUNY)
-        try {
-          normalized = toAscii(name + ".uq")
-          if (index != -1) vets.splice(index, 1)
-        } catch (e) {
-          if (index == -1) vets.push(NAME_INVALID_PUNY)
-        }
-
-        // only check if name is valid punycode
-        if (normalized! !== undefined) {
-
-          index = vets.indexOf(NAME_URL)
-          if (name != "" && !isValidDomain(normalized)) {
-            if (index == -1) vets.push(NAME_URL)
-          } else if (index != -1) vets.splice(index, 1)
-
-          try {
-
-            const owner = await uqNft.ownerOf(hash(normalized))
-
-            index = vets.indexOf(NAME_NOT_OWNER)
-            if (owner == accounts![0] && index != -1) 
-              vets.splice(index, 1);
-            else if (index == -1 && owner != accounts![0])
-              vets.push(NAME_NOT_OWNER);
-
-            index = vets.indexOf(NAME_NOT_REGISTERED)
-            if (index != -1) vets.splice(index, 1)
-
-          } catch {
-
-            index = vets.indexOf(NAME_NOT_REGISTERED)
-            if (index == -1) vets.push(NAME_NOT_REGISTERED)
-
-          }
-
-          if (nameVets.length == 0) 
-            setUqName(normalized)
-
-        }
-
-        setNameVets(vets)
-
+    pwDebouncer.current = setTimeout(async () => {
+      if (pw != "" && pw2 != "") {
+        if (pw.length < 6)
+          setPwErr("Password must be at least 6 characteers")
+        else if (pw == pw2) {
+          setPwErr("")
+          handlePassword()
+        } else 
+          setPwErr("Passwords must match")
+      } 
     }, 500)
 
-  }, [name])
+  }, [pw, pw2])
+
+  const KEY_WRONG_NET_KEY = "Keyfile does not match public key"
+  const KEY_WRONG_IP = "IP Address does not match records"
+
+  // for if we check router validity in future
+  // const KEY_BAD_ROUTERS = "Routers from records are offline"
+
+  const handlePassword = async () => {
+    try {
+
+      const response = await fetch('/vet-keyfile', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          keyfile: localKey,
+          password: pw
+        })
+      })
+
+      setPwVet("")
+
+      const data = await response.json()
+
+      setUqName(data.username)
+
+      const errs = [...keyErrs]
+
+      const ws = await qns.ws(namehash(data.username))
+
+      let index = errs.indexOf(KEY_WRONG_NET_KEY)
+      if (ws.publicKey != '0x' + data.networking_key) {
+        if (index == -1) errs.push(KEY_WRONG_NET_KEY)
+      } else if (index != -1) errs.splice(index, 1)
+
+      index = errs.indexOf(KEY_WRONG_IP)
+      if (ws.ip != 0 && ws.ip != ipAddr) {
+        if (index == -1) errs.push(KEY_WRONG_IP)
+      } else if (index != -1) {
+        errs.splice(index, 1)
+        setDirect(true)
+      }
+
+      setKeyErrs(errs)
+
+    } catch {
+
+      setPwVet("Password is incorrect")
+
+    }
+  }
+
+  const handleKeyfile = (e: any) => {
+    e.preventDefault()
+    const file = e.target.files[0]
+    if (!file) return
+    const reader = new FileReader()
+    reader.onloadend = () => {
+      setLocalKey(reader.result as string)
+      setLocalKeyFileName(file.name)
+    }
+    reader.readAsText(file)
+  }
+
+  const keyfileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleKeyUploadClick = async (e: any) => {
+    e.preventDefault()
+    keyfileInputRef.current?.click()
+  }
 
   const handleLogin = async () => {
 
-    const response = await fetch('/boot', { 
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        keyfile: "",
-        reset: true,
-        password: pw,
-        username: `${name}.uq`,
-        direct
+    if (keyErrs.length == 0) {
+
+      const response = await fetch('/boot', { 
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          keyfile: localKey,
+          reset: false,
+          password: pw,
+          username: uqName,
+          direct
+        })
       })
-    })
-    
-    const base64Keyfile = await response.json()
-    let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${name}.uq.keyfile`)
-    document.body.appendChild(link);
-    link.click();
 
-    const interval = setInterval(async () => {
-      const homepageResult = await fetch('/') 
-      if (homepageResult.status < 400) {
-        clearInterval(interval)
-        window.location.replace('/')
+      if (!needKey) {
+        const base64Keyfile = await response.json()
+        let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${uqName}.keyfile`)
+        document.body.appendChild(link);
+        link.click();
       }
-    }, 2000);
 
-  };
+      const interval = setInterval(async () => {
+        const homepageResult = await fetch('/') 
+        if (homepageResult.status < 400) {
+          clearInterval(interval)
+          window.location.replace('/')
+        }
+      }, 2000);
 
-  const handleResetRecords = async (asDirect: boolean) => {
-
-    const tx = await qns.setWsRecord(
-      namehash(uqName),
-      `0x${networkingKey}`,
-      asDirect ? ipAddr : 0,
-      asDirect ? port : 0,
-      asDirect ? [] : routers.map(x => namehash(x))
-    )
-
-    setLoading(true);
-
-    await tx.wait();
-
-    if (pw) handleLogin();
-    else {
-      setReset(true);
-      setLoading(false);
-      setDirect(asDirect);
-      navigate('/set-password');
     }
 
-  }
+  };
 
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
+
   const uqNft = UqNFT__factory
     .connect(UQ_NFT_ADDRESSES[chainId], provider.getSigner());
   const qns = QNSRegistry__factory
@@ -203,53 +203,86 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
 
   const flipUploadKey = () => setUploadKey(needKey || !uploadKey)
 
-  return ( <>
+  return (
+    <>
     <div id="signup-form-header" className="row">
       <img alt="icon" style={{margin: "0 1em 0.2em 0"}} src="data:image/vnd.microsoft.icon;base64,AAABAAEAICAAAAEAIACoEAAAFgAAACgAAAAgAAAAQAAAAAEAIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wAqhP/x////AP///wAqhP//KoT//////wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wD///8A////AP///wD/4xwJ////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////ACmE/7MqhP//////AP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////AP///wD///8A////AP/fIBD53CD/+N4hJ////wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8A////AP///wD///8A/98gEPncIP/53CD/+dwg/////wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8AK4X/zP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wD///8A////AP///wD/3yAQ+dwg//ncIP/53CD/+dwg/////wD///8A////AP///wD///8A////AP///wD///8A////ACqE//8rhf/M////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////AP///wD///8A////AP/fIBD53CD/+dwg//ncIP/53CD/+dwg/////wD///8A////AP///wD///8A////AP///wD///8AKoT//yuF/8z///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8A////AP///wD///8A/98gEPncIP/53CD/+dwg//ncIP/53CD/+dwg/////wD///8A////AP///wD///8A////AP///wAqhP//K4X/zP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wD///8A////AP///wD/3yAQ+dwg//ncIP/53CD/+dwg//ncIP/53CD/9twjHf///wD///8A////AP///wD///8A////ACqE//8rhf/M////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////AP///wD///8A////AP/fIBD53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/////AP///wD///8AKoT//////wD///8AKoT//yuF/8z///8AKoT//yqE//////8A////ACqE//////8A////AP///wD///8A////ACqE//8qhP/D////AP///wD///8A/98gEPncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CCx////AP///wAqhP//////AP///wAqhP//K4X/zP///wAqhP//KoT//////wD///8A////AP///wD///8A////AP///wD///8AKoT//yqE//8qhP//////AP///wD/3yAQ+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP////8A////ACqE//////8A////ACqE//8rhf/M////ACqE//8qhP//////AP///wD///8A////AP///wD///8A////AP///wAqhP//KoT//yqE//8qhP//////AP/fIBD53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg/////wAqhP//KoT//////wD///8AKoT//yuF/8z///8AKoT//yqE//////8A////AP///wD///8A////AP///wD///8A////ACqE//8qhP//KoT//yqE//8qhP///98gEPncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwfyyqE//8qhP//////AP///wAqhP//K4X/zP///wAqhP//////AP///wD///8A////AP///wD///8A////AP///wD///8AKoT//yqE//8qhP//KoT//yqE////3yAQ+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/KoT//yqE//////8A////ACqE//8rhf/M////ACqE//////8A////AP///wD///8A////AP///wD///8A////AP///wAqhP//KoT//yqE//8qhP//KoT////fIBD53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP8qhP//KoT//////wD///8AKoT//yuF/8z///8AKoT//////wD///8A////AP///wD///8A////AP///wD///8A////ACqE//8qhP//KoT//yqE//8qhP//Lob7wPncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg/yqE//8qhP//////AP///wAqhP//K4X/zP///wAqhP//////AP///wD///8A////AP///wD///8A////AP///wD///8AKoT//yqE//8qhP//KoT//yqE//8thvvL+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/KoT//yqE//////8A////ACqE//8rhf/M////ACqE//////8A////AP///wD///8A////AP///wD///8A////AP///wAqhP//KoT//yqE//8qhP//KoT////fIBD53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP8qhP//KoT//////wD///8AKoT//yuF/8z///8AKoT//////wD///8A////AP///wD///8A////AP///wD///8A////ACqE//8qhP//KoT//yqE//8qhP///98gEPncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg/yqE//8qhP//////AP///wAqhP//K4X/zP///wAqhP//KoT//////wD///8A////AP///wD///8A////AP///wD///8AKoT//yqE//8qhP//KoT//yqE////3yAQ+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53B/7AKr/AyqE//////8A////ACqE//8rhf/M////ACqE//8qhP//////AP///wD///8A////AP///wD///8A////AP///wAqhP//KoT//yqE//8qhP//////AP/fIBD53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg/////wD///8AKoT//////wD///8AKoT//yuF/8z///8AKoT//yqE//////8A////AP///wD///8A////AP///wD///8A////ACqE//8qhP//KoT//////wD///8A/98gEPncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/////AP///wAqhP//////AP///wAqhP//K4X/zP///wAqhP//KoT//////wD///8AKoT/kf///wD///8A////AP///wD///8AKoT//yqE//////8A////AP///wD/3yAQ+dwg//ncIP/53CD/+dwg//ncIP/53CD/+dwg//ncIP7///8A////AP///wD///8A////ACqE//8rhf/M////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8AKoT/3SqE//////8A////AP///wD///8A////AP/fIBD53CD/+dwg//ncIP/53CD/+dwg//ncIP/53CD/////AP///wD///8A////AP///wD///8AKoT//yuF/8z///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8A////AP///wD///8A/98gEPncIP/53CD/+dwg//ncIP/53CD/+dwg//rcIL3///8A////AP///wD///8A////AP///wAqhP//K4X/zP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wD///8A////AP///wD/3yAQ+dwg//ncIP/53CD/+dwg//ncIP/53CD/////AP///wD///8A////AP///wD///8A////ACqE//8rhf/M////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////AP///wD///8A////AP/fIBD53CD/+dwg//ncIP/53CD/+dwg/////wD///8A////AP///wD///8A////AP///wD///8A////ACuF/8z///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8A////AP///wD///8A/98gEPncIP/53CD/+dwg//ncIP////8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////ACqE//8qhP//////AP///wD///8A////AP///wD/3yAQ+dwg//ncIP/53CD/////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8AKoT//yqE//////8A////AP///wD///8A////AP/fIBD53CD/+dwg9////wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////ACqE//8qhP//////AP///wAqhP//KoT//////wD///8A////AP///wD///8A/98gEP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8AAKr/AyqE//////8A////ACqE//8qhP//////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A////AP///wD///8A//Z////mff/+Znx//mZ8P/pmfB/yZnwP8mZ8B/JmfAPyZnwDsm+cAbJ/jAGyf4QBMn+AADL/gAAy/4AAMv+AADL/gAAy/4AAMv+AADJ/gAAyf4QBsn+MAbJvnAHyZnwD8mZ8A/JmfAfyZnwP+mZ8H/5mfD/+Znx//+Z9///mf/8=" />
-      <h1 style={{textAlign: "center"}}>Reset Uqbar Node</h1>
+      <h1 style={{textAlign: "center"}}>Login to Uqbar</h1>
     </div>
     <div id="signup-form" className="col">
-    { loading ? <Loader msg="Resetting Websocket Information"/> : <>
-      <div className="row" style={{margin: "0 0 1em"}}>
-        <div style={{fontSize: "0.75em"}}>Address:</div>
-        {accounts && <div id="current-address">{accounts[0]}</div>}
+
+      <div className="login-row col"> Login as... { uqName } </div>
+
+      <div className="login-row row"> 1. Select Keyfile </div>
+
+      <div className="row" style={{margin: ".5em", opacity: needKey ? .5 : 1}}> 
+        <label> 
+          <input disabled={needKey} type="checkbox" checked={!uploadKey} onChange={flipUploadKey} />
+          { needKey ? "No" : "Use" } Existing Keyfile 
+        </label>
       </div>
 
-      <div className="login-row row">
-        1. Enter .Uq Name
-        <div className="tooltip-container">
-          <div className="tooltip-button">&#8505;</div>
-          <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+      <div style={{margin: ".5em", display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', opacity: uploadKey ?  1 : .5}}>
+        <div className="row"> 
+          <label>
+            <input type="checkbox" checked={uploadKey} onChange={flipUploadKey} />
+            Upload Keyfile
+          </label>
         </div>
+        <button style={{width: "50%", fontSize: "65%" }} onClick={handleKeyUploadClick}> 
+          { localKeyFileName ? "Change" : "Upload" } Keyfile
+        </button>
+        <p style={{opacity: !localKeyFileName ? .5 : 1 }}> { localKeyFileName ? localKeyFileName : ".keyfile"} </p>
+        <input ref={keyfileInputRef} style={{display:"none"}} type="file" onChange={handleKeyfile} />
       </div>
+
+      <div className="login-row row"> 2. Enter Password </div>
+
+      <div className="row">
+        <div className="row label-row">
+          <label htmlFor="password">Enter Password</label>
+        </div>
+        <input
+          type="password"
+          id="password"
+          required
+          minLength={6}
+          name="password"
+          placeholder="Min 6 characters"
+          value={pw}
+          onChange={(e) => setPw(e.target.value)}
+        />
+      </div>
+
+      <div className="row">
+        <div className="row label-row">
+          <label htmlFor="confirm-password">Confirm Password</label>
+        </div>
+        <input
+          type="password"
+          id="confirm-password"
+          required minLength={6}
+          name="confirm-password"
+          placeholder="Min 6 characters"
+          value={pw2}
+          onChange={(e) => setPw2(e.target.value)}
+        />
+      </div>
+
+      { pwErr ??  <div className="row"> <p style={{color:"red"}}> {pwErr} </p> </div> }
+      { pwVet ??  <div className="row"> <p style={{color:"red"}}> {pwVet} </p> </div> }
 
       <div className="col">
-        <div style={{display:'flex', alignItems:'center'}}>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            type="text"
-            minLength={9}
-            required
-            name="uq-name"
-            placeholder="e.g. myname"
-          />
-          .uq
-        </div>
-        { nameVets.map((x,i) => <span key={i} className="name-err">{x}</span>) }
+        { keyErrs.map((x,i) => <span key={i} className="key-err">{x}</span>) }
+        { keyErrs.length 
+            ? <button onClick={()=>navigate('/reset')}> Reset Networking Information </button> 
+            : <button onClick={handleLogin}> Login </button>
+        }
       </div>
 
-      <label htmlFor="direct">
-        Reset info as a direct node (only do this if you are hosting your node somewhere stable)
-      </label>
-      <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
 
-      <button onClick={()=>handleResetRecords(direct)}> Reset Networking Keys </button>
-
-      </>
-    }
-    </div> </>
+    </div></>
   )
 }
 
-export default Reset;
+export default Login;

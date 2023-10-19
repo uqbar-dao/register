@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
 import { hooks } from "./connectors/metamask";
 import {
@@ -6,10 +6,12 @@ import {
   UQ_NFT_ADDRESSES,
 } from "./constants/addresses";
 import ConnectWallet from "./components/ConnectWallet";
-import ClaimUqName from "./components/ClaimUqName";
+import RegisterUqName from "./components/RegisterUqName";
+import ClaimUqInvite from "./components/ClaimUqInvite";
 import SetPassword from "./components/SetPassword";
-import SetWs from "./components/SetWs";
+import Login from './components/Login'
 import Reset from './components/Reset'
+import UqHome from "./components/UqHome"
 
 export type Identity = {
   name: string,
@@ -24,24 +26,40 @@ const {
 } = hooks;
 
 function App() {
-  let chainId = useChainId();
-  let provider = useProvider();
-  let [confirmedUqName, setConfirmedUqName] = useState('');
-  let [our, setOur] = useState<Identity | null>(null);
+  const chainId = useChainId();
+  const provider = useProvider();
+  
+  const [pw, setPw] = useState<string>('');
+  const [key, setKey] = useState<string>('');
+  const [keyFileName, setKeyFileName] = useState<string>('');
+  const [reset, setReset] = useState<boolean>(false);
+  const [direct, setDirect] = useState<boolean>(false);
+  const [uqName, setUqName] = useState<string>('');
+
+  // just pass all the props each time since components won't mind extras
+  const props = { 
+    direct, setDirect, 
+    key, 
+    keyFileName, setKeyFileName, 
+    reset, setReset,
+    pw, setPw, 
+    uqName, setUqName
+  }
 
   return (
     <>
       {
-        !chainId?  <ConnectWallet /> :
-        !provider? <ConnectWallet /> :
-        !(chainId in QNS_REGISTRY_ADDRESSES)? <p>change networks</p> : // TODO automatic prompt to switch to sepolia
-        !(chainId in UQ_NFT_ADDRESSES)?       <p>change networks</p> :
+        !chainId || !provider ?  <ConnectWallet /> :
+        !(chainId in QNS_REGISTRY_ADDRESSES) || !(chainId in UQ_NFT_ADDRESSES) 
+          ? <p>change networks</p> : // TODO automatic prompt to switch to sepolia
         <Router>
           <Routes>
-            <Route path="/" element={<ClaimUqName setConfirmedUqName={setConfirmedUqName}/>} />
-            <Route path="/reset" element={<Reset setConfirmedUqName={setConfirmedUqName}/>} />
-            <Route path="/set-password" element={<SetPassword confirmedUqName={confirmedUqName} setOur={setOur}/>} />
-            <Route path="/set-ws" element={<SetWs our={our!} />} />
+            <Route path="/" element={<UqHome/>} />
+            <Route path="/login" element={<Login {...props} />} />
+            <Route path="/reset" element={<Reset {...props}/>} />
+            <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
+            <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
+            <Route path="/set-password" element={<SetPassword {...props}/>} />
           </Routes>
         </Router>
       }
