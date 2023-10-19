@@ -31,11 +31,20 @@ function App() {
   
   const [pw, setPw] = useState<string>('');
   const [key, setKey] = useState<string>('');
+  const [keyFileName, setKeyFileName] = useState<string>('');
+  const [reset, setReset] = useState<boolean>(false);
   const [direct, setDirect] = useState<boolean>(false);
-  const [confirmedUqName, setConfirmedUqName] = useState<string>('');
+  const [uqName, setUqName] = useState<string>('');
 
   // just pass all the props each time since components won't mind extras
-  const props = { pw, setPw, key, setKey, direct, setDirect, setConfirmedUqName, confirmedUqName }
+  const props = { 
+    direct, setDirect, 
+    key, 
+    keyFileName, setKeyFileName, 
+    reset, setReset,
+    pw, setPw, 
+    uqName, setUqName
+  }
 
   return (
     <>
@@ -46,7 +55,7 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<UqHome/>} />
-            <Route path="/login" element={<Login {...props}/>} />
+            <Route path="/login" element={<Login {...props} />} />
             <Route path="/reset" element={<Reset {...props}/>} />
             <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
             <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
