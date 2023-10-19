@@ -18,10 +18,10 @@ const {
 type RegisterUqNameProps = {
   direct: boolean,
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
+  setUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-function RegisterUqName({ direct, setDirect, setConfirmedUqName }: RegisterUqNameProps) {
+function RegisterUqName({ direct, setDirect, setUqName }: RegisterUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
@@ -79,7 +79,7 @@ function RegisterUqName({ direct, setDirect, setConfirmedUqName }: RegisterUqNam
     setIsLoading(true);
     await tx.wait();
     setIsLoading(false);
-    setConfirmedUqName(`${name}.uq`);
+    setUqName(`${name}.uq`);
     navigate("/set-password");
 
   }

@@ -18,10 +18,10 @@ const {
 type ClaimUqNameProps = {
   direct: boolean,
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
+  setUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-function ClaimUqInvite({ direct, setDirect, setConfirmedUqName }: ClaimUqNameProps) {
+function ClaimUqInvite({ direct, setDirect, setUqName }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
@@ -160,7 +160,7 @@ function ClaimUqInvite({ direct, setDirect, setConfirmedUqName }: ClaimUqNamePro
     setLoaderMsg('')
     setIsLoading(false);
 
-    setConfirmedUqName(`${name}.uq`);
+    setUqName(`${name}.uq`);
 
     navigate("/set-password");
 
