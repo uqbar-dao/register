@@ -7,10 +7,12 @@ function UqHome () {
     const inviteRedir = () => navigate('/claim-invite')
     const registerRedir = () => navigate('/register-name')
     const loginRedir = () => navigate('/login')
+    const resetRedir = () => navigate('/reset')
 
     return (
         <div>
             <button onClick={loginRedir}> Login </button>
+            <button onClick={resetRedir}> Reset </button>
             <button onClick={inviteRedir}> Claim Uq Invite </button>
             <button onClick={registerRedir}> Register Uqname </button>
         </div>

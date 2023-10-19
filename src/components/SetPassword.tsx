@@ -31,6 +31,7 @@ function SetPassword({ confirmedUqName, direct }: SetPasswordProps) {
         credentials: 'include',
         body: JSON.stringify({ 
           password, 
+          reset: false,
           username: confirmedUqName,
           direct,
           keyfile: ""

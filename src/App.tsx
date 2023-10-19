@@ -10,6 +10,7 @@ import RegisterUqName from "./components/RegisterUqName";
 import ClaimUqInvite from "./components/ClaimUqInvite";
 import SetPassword from "./components/SetPassword";
 import Login from './components/Login'
+import Reset from './components/Reset'
 import UqHome from "./components/UqHome"
 
 export type Identity = {
@@ -43,6 +44,7 @@ function App() {
           <Routes>
             <Route path="/" element={<UqHome/>} />
             <Route path="/login" element={<Login {...props}/>} />
+            <Route path="/reset" element={<Reset {...props}/>} />
             <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
             <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
             <Route path="/set-password" element={<SetPassword {...{direct, confirmedUqName}}/>} />

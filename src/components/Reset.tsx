@@ -18,13 +18,13 @@ const {
   useProvider,
 } = hooks;
 
-type LoginProps = {
+type ResetProps = {
   direct: boolean,
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
 }
 
-function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
+function Reset({ direct, setDirect, setConfirmedUqName }: ResetProps) {
   const chainId = useChainId();
   const accounts = useAccounts();
   const provider = useProvider();
@@ -34,6 +34,9 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
   const [ipAddr, setIpAddr] = useState<number>(0);
   const [port, setPort] = useState<number>(0);
   const [routers, setRouters] = useState<string[]>([]);
+
+  const [name, setName] = useState<string>('');
+  const [nameVets, setNameVets] = useState<string[]>([]);
 
   const [uploadKey, setUploadKey] = useState<boolean>(false)
   const [resetted, setResetted] = useState<boolean>(false);
@@ -80,24 +83,116 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
     })()
   }, [])
 
+  const nameDebouncer = useRef<NodeJS.Timeout | null>(null)
+
+  const NAME_INVALID_PUNY = "Unsupported punycode character"
+  const NAME_NOT_OWNER = "Name does not belong to this wallet"
+  const NAME_NOT_REGISTERED = "Name is not registered"
+  const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
+
+  useEffect(()=> {
+    if (nameDebouncer.current) 
+      clearTimeout(nameDebouncer.current);
+
+    nameDebouncer.current = setTimeout(async () => {
+
+        if (name == "") {
+          setNameVets([])
+          return;
+        }
+
+        let index: number
+        let vets = [...nameVets]
+        const kErrs = [...keyErrs]
+
+        let normalized: string
+        index = vets.indexOf(NAME_INVALID_PUNY)
+        try {
+          normalized = toAscii(name + ".uq")
+          if (index != -1) vets.splice(index, 1)
+        } catch (e) {
+          if (index == -1) vets.push(NAME_INVALID_PUNY)
+        }
+
+        // only check if name is valid punycode
+        if (normalized! !== undefined) {
+
+          if (keyName != '') {
+            index = kErrs.indexOf(KEY_DIFFERENT_USERNAME)
+            if (keyName != normalized) {
+              if (index == -1) kErrs.push(KEY_DIFFERENT_USERNAME)
+            } else if (index != -1) kErrs.splice(index, 1)
+          } 
+
+          index = vets.indexOf(NAME_URL)
+          if (name != "" && !isValidDomain(normalized)) {
+            if (index == -1) vets.push(NAME_URL)
+          } else if (index != -1) vets.splice(index, 1)
+
+          try {
+
+            const owner = await uqNft.ownerOf(hash(normalized))
+
+            index = vets.indexOf(NAME_NOT_OWNER)
+            if (owner == accounts![0] && index != -1) 
+              vets.splice(index, 1);
+            else if (index == -1 && owner != accounts![0])
+              vets.push(NAME_NOT_OWNER);
+
+            index = vets.indexOf(NAME_NOT_REGISTERED)
+            if (index != -1) vets.splice(index, 1)
+
+            const wsRecords = await qns.ws(namehash(normalized))
+            if (keyNetKey != '') {
+              index = kErrs.indexOf(KEY_WRONG_NET_KEY)
+              if (keyNetKey != wsRecords.publicKey) {
+                if (index == -1) kErrs.push(KEY_WRONG_NET_KEY)
+              } else if (index != -1) {
+                kErrs.splice(index, 1)
+
+                if (wsRecords.ip == 0) {
+                  setAprioriDirect(false)
+                  setDirect(false)
+                } else {
+                  setAprioriDirect(true)
+                  setDirect(true)
+                }
+
+              }
+            }
+
+          } catch {
+
+            index = vets.indexOf(NAME_NOT_REGISTERED)
+            if (index == -1) vets.push(NAME_NOT_REGISTERED)
+
+          }
+        }
+
+        setNameVets(vets)
+        setKeyErrs(kErrs)
+
+    }, 500)
+
+  }, [name])
+
   const pwDebouncer = useRef<NodeJS.Timeout | null>(null)
   useEffect(() => {
 
     if (pwDebouncer.current) 
       clearTimeout(pwDebouncer.current);
 
-    console.log("pw", pw, "pw2", pw2)
-
     pwDebouncer.current = setTimeout(async () => {
-      if (pw != "" && pw2 != "") {
-        if (pw.length < 6)
-          setPwErr("Password must be at least 6 characteers")
-        else if (pw == pw2) {
-          setPwErr("")
+
+      if (pw2 != "" && pw != pw2)
+        setPwErr("Passwords do not match")
+      else {
+        setPwErr("")
+        if (6 <= pw.length) {
           handlePassword()
-        } else 
-          setPwErr("Passwords must match")
-      } 
+        }
+      }
+
     }, 500)
 
   }, [pw, pw2])
@@ -127,10 +222,15 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
       const errs = [...keyErrs]
 
+      let index = errs.indexOf(KEY_DIFFERENT_USERNAME)
+      if (data.username != `${name}.uq`) {
+        if (index == -1) errs.push(KEY_DIFFERENT_USERNAME)
+      } else if (index != -1) errs.splice(index, 1)
+
       const ws = await qns.ws(namehash(data.username))
       setKeyNetKey(`0x${data.networking_key}`)
 
-      let index = errs.indexOf(KEY_WRONG_NET_KEY)
+      index = errs.indexOf(KEY_WRONG_NET_KEY)
       if (ws.publicKey != '0x' + data.networking_key) {
         if (index == -1) errs.push(KEY_WRONG_NET_KEY)
       } else if (index != -1) errs.splice(index, 1)
@@ -143,9 +243,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       setKeyErrs(errs)
 
     } catch {
-
       setPwVet("Password is incorrect")
-
     }
   }
 
@@ -176,10 +274,10 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ 
-        keyfile: key,
+        keyfile: resetted ? "" : key,
         reset: resetted,
         password: pw,
-        username: keyName,
+        username: `${name}.uq`,
         direct
       })
     })
@@ -190,7 +288,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a');
       link.href = url;
-      link.setAttribute('download', `${keyName}.keyfile`)
+      link.setAttribute('download', `${name}.uq.keyfile`)
       document.body.appendChild(link);
       link.click();
     }
@@ -210,7 +308,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
   const handleResetRecords = async (asDirect: boolean) => {
 
     const tx = await qns.setWsRecord(
-      keyName,
+      namehash(`${name}.uq`),
       `0x${networkingKey}`,
       asDirect ? ipAddr : 0,
       asDirect ? port : 0,
@@ -239,10 +337,40 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
   return (
     <div id="signup-form" className="col">
+    { loading ? <Loader msg="Resetting Websocket Information"/> : <>
+      <div className="row" style={{margin: "0 0 1em"}}>
+        <div style={{fontSize: "0.75em"}}>Address:</div>
+        {accounts && <div id="current-address">{accounts[0]}</div>}
+      </div>
 
-      <div className="login-row col"> Login as... { keyName } </div>
+      <div className="login-row row">
+        1. Enter .Uq Name
+        <div className="tooltip-container">
+          <div className="tooltip-button">&#8505;</div>
+          <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+        </div>
+      </div>
 
-      <div className="login-row row"> 1. Select Keyfile </div>
+      <div className="col">
+        <div style={{display:'flex', alignItems:'center'}}>
+          <input
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            type="text"
+            minLength={9}
+            required
+            name="uq-name"
+            placeholder="e.g. myname"
+          />
+          .uq
+        </div>
+        { nameVets.map((x,i) => <span key={i} className="name-err">{x}</span>) }
+      </div>
+
+      <div className="login-row row">
+        2. Choose Keyfile
+        <br/>
+      </div>
 
       <div className="row" style={{margin: ".5em", opacity: needKey ? .5 : 1}}> 
         <label> 
@@ -265,7 +393,10 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         <input ref={keyfileInputRef} style={{display:"none"}} type="file" onChange={handleKeyfile} />
       </div>
 
-      <div className="login-row row"> 2. Enter Password </div>
+      <div className="login-row row">
+        3. Enter Password
+        <br/>
+      </div>
 
       <div className="row">
         <div className="row label-row">
@@ -301,7 +432,9 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
       { pwErr ??  <div className="row"> <p style={{color:"red"}}> {pwErr}</p> </div> }
       { pwVet ??  <div className="row"> <p style={{color:"red"}}> {pwVet}</p> </div> }
 
-      <div className="login-row row"> 3. Overview </div>
+      <div className="login-row row">
+        4. Overview
+      </div>
 
       <div className="col">
         { keyErrs.map((x,i) => <span key={i} className="key-err">{x}</span>) }
@@ -314,10 +447,12 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         }
       </div>
 
-      <button disabled={( !!keyErrs.length || !!pwErr || !!pwVet )} onClick={handleLogin}> Submit </button>
+      <button onClick={handleLogin}> Submit </button>
 
+      </>
+    }
     </div>
   )
 }
 
-export default Login;
+export default Reset;
