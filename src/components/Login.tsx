@@ -20,56 +20,40 @@ const {
 
 type LoginProps = {
   direct: boolean,
-  setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setConfirmedUqName: React.Dispatch<React.SetStateAction<string>>
+  pw: string,
+  uqName: string,
+  setDirect: React.Dispatch<React.SetStateAction<boolean>>, 
+  setPw: React.Dispatch<React.SetStateAction<string>>,
+  setUqName: React.Dispatch<React.SetStateAction<string>>,
 }
 
-function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
+function Login({ direct, pw, uqName, setDirect, setPw, setUqName }: LoginProps) {
   const chainId = useChainId();
-  const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
 
-  const [networkingKey, setNetworkingKey] = useState<string>('');
   const [ipAddr, setIpAddr] = useState<number>(0);
   const [port, setPort] = useState<number>(0);
   const [routers, setRouters] = useState<string[]>([]);
 
   const [uploadKey, setUploadKey] = useState<boolean>(false)
-  const [resetted, setResetted] = useState<boolean>(false);
   const [needKey, setNeedKey] = useState<boolean>(false);
-  const [key, setKey] = useState<string>('');
-  const [keyFileName, setKeyFileName] = useState<string>('');
-  const [keyName, setKeyName] = useState<string>('');
-  const [keyNetKey, setKeyNetKey] = useState<string>('');
+  const [localKey, setLocalKey] = useState<string>('');
+  const [localKeyFileName, setLocalKeyFileName] = useState<string>('');
   const [keyErrs, setKeyErrs] = useState<string[]>([]);
 
-  const [aprioriDirect, setAprioriDirect] = useState<boolean>(false);
-
-  const [pw, setPw] = useState<string>('');
   const [pw2, setPw2] = useState<string>('');
   const [pwErr, setPwErr] = useState<string>('');
   const [pwVet, setPwVet] = useState<string>('');
-
-  const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
 
       let response = await fetch('/info', { method: 'GET' })
       let data = await response.json()
-      setNetworkingKey(data.networking_key)
       setRouters(data.allowed_routers)
       setIpAddr(ipToNumber(data.ws_routing[0]))
       setPort(data.ws_routing[1])
-
-      // await qns.setWsRecord(
-      //   namehash("cherryblossom.uq"),
-      //   hexlify(randomBytes(32)),
-      //   1,
-      //   1,
-      //   []
-      // )
 
       response = await fetch('/has-keyfile', { method: 'GET'})
       data = await response.json()
@@ -86,8 +70,6 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
     if (pwDebouncer.current) 
       clearTimeout(pwDebouncer.current);
 
-    console.log("pw", pw, "pw2", pw2)
-
     pwDebouncer.current = setTimeout(async () => {
       if (pw != "" && pw2 != "") {
         if (pw.length < 6)
@@ -102,19 +84,20 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
   }, [pw, pw2])
 
-  const KEY_DIFFERENT_USERNAME = "Keyfile does not match username"
   const KEY_WRONG_NET_KEY = "Keyfile does not match public key"
+  const KEY_WRONG_IP = "IP Address does not match records"
 
-  const WS_WRONG_IP = "IP Address does not match records"
-  const WS_BAD_ROUTERS = "Routers from records are offline"
+  // for if we check router validity in future
+  // const KEY_BAD_ROUTERS = "Routers from records are offline"
 
   const handlePassword = async () => {
     try {
+
       const response = await fetch('/vet-keyfile', { 
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          keyfile: key,
+          keyfile: localKey,
           password: pw
         })
       })
@@ -123,7 +106,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
       const data = await response.json()
 
-      setKeyName(data.username)
+      setUqName(data.username)
 
       const errs = [...keyErrs]
 
@@ -134,10 +117,13 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         if (index == -1) errs.push(KEY_WRONG_NET_KEY)
       } else if (index != -1) errs.splice(index, 1)
 
-      index = errs.indexOf(WS_WRONG_IP)
+      index = errs.indexOf(KEY_WRONG_IP)
       if (ws.ip != 0 && ws.ip != ipAddr) {
-        if (index == -1) errs.push(WS_WRONG_IP)
-      } else if (index != -1) errs.splice(index, 1)
+        if (index == -1) errs.push(KEY_WRONG_IP)
+      } else if (index != -1) {
+        errs.splice(index, 1)
+        setDirect(true)
+      }
 
       setKeyErrs(errs)
 
@@ -148,14 +134,14 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
     }
   }
 
-  const handleKeyfile = async (e: any) => {
+  const handleKeyfile = (e: any) => {
     e.preventDefault()
     const file = e.target.files[0]
     if (!file) return
     const reader = new FileReader()
     reader.onloadend = () => {
-      setKeyFileName(file.name)
-      setKey(reader.result as string)
+      setLocalKey(reader.result as string)
+      setLocalKeyFileName(file.name)
     }
     reader.readAsText(file)
   }
@@ -169,66 +155,47 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
 
   const handleLogin = async () => {
 
-    if (resetted || keyErrs.length == 0 || keyErrs.length == 0) {
+    if (keyErrs.length == 0) {
 
-    const response = await fetch('/boot', { 
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        keyfile: key,
-        reset: resetted,
-        password: pw,
-        username: keyName,
-        direct
+      const response = await fetch('/boot', { 
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          keyfile: localKey,
+          reset: false,
+          password: pw,
+          username: uqName,
+          direct
+        })
       })
-    })
 
-    if (!needKey || resetted) {
-      const base64Keyfile = await response.json()
-      let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `${keyName}.keyfile`)
-      document.body.appendChild(link);
-      link.click();
-    }
-
-    const interval = setInterval(async () => {
-      const homepageResult = await fetch('/') 
-      if (homepageResult.status < 400) {
-        clearInterval(interval)
-        window.location.replace('/')
+      if (!needKey) {
+        const base64Keyfile = await response.json()
+        let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
+        const url = window.URL.createObjectURL(blob)
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `${uqName}.keyfile`)
+        document.body.appendChild(link);
+        link.click();
       }
-    }, 2000);
+
+      const interval = setInterval(async () => {
+        const homepageResult = await fetch('/') 
+        if (homepageResult.status < 400) {
+          clearInterval(interval)
+          window.location.replace('/')
+        }
+      }, 2000);
 
     }
 
   };
 
-  const handleResetRecords = async (asDirect: boolean) => {
-
-    const tx = await qns.setWsRecord(
-      keyName,
-      `0x${networkingKey}`,
-      asDirect ? ipAddr : 0,
-      asDirect ? port : 0,
-      asDirect ? [] : routers.map(x => namehash(x))
-    )
-
-    setLoading(true);
-
-    await tx.wait();
-
-    setResetted(true);
-    setLoading(false);
-    setDirect(asDirect);
-
-  }
-
   if (!chainId) return <p>connect your wallet</p>
   if (!provider) return <p>idk whats wrong</p>
   if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
+
   const uqNft = UqNFT__factory
     .connect(UQ_NFT_ADDRESSES[chainId], provider.getSigner());
   const qns = QNSRegistry__factory
@@ -244,7 +211,7 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
     </div>
     <div id="signup-form" className="col">
 
-      <div className="login-row col"> Login as... { keyName } </div>
+      <div className="login-row col"> Login as... { uqName } </div>
 
       <div className="login-row row"> 1. Select Keyfile </div>
 
@@ -263,9 +230,9 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
           </label>
         </div>
         <button style={{width: "50%", fontSize: "65%" }} onClick={handleKeyUploadClick}> 
-          { keyFileName ? "Change" : "Upload" } Keyfile
+          { localKeyFileName ? "Change" : "Upload" } Keyfile
         </button>
-        <p style={{opacity: !keyFileName ? .5 : 1 }}> { keyFileName ? keyFileName : ".keyfile"} </p>
+        <p style={{opacity: !localKeyFileName ? .5 : 1 }}> { localKeyFileName ? localKeyFileName : ".keyfile"} </p>
         <input ref={keyfileInputRef} style={{display:"none"}} type="file" onChange={handleKeyfile} />
       </div>
 
@@ -302,23 +269,17 @@ function Login({ direct, setDirect, setConfirmedUqName }: LoginProps) {
         />
       </div>
 
-      { pwErr ??  <div className="row"> <p style={{color:"red"}}> {pwErr}</p> </div> }
-      { pwVet ??  <div className="row"> <p style={{color:"red"}}> {pwVet}</p> </div> }
-
-      <div className="login-row row"> 3. Overview </div>
+      { pwErr ??  <div className="row"> <p style={{color:"red"}}> {pwErr} </p> </div> }
+      { pwVet ??  <div className="row"> <p style={{color:"red"}}> {pwVet} </p> </div> }
 
       <div className="col">
         { keyErrs.map((x,i) => <span key={i} className="key-err">{x}</span>) }
-        { (keyErrs.length > 1 || (keyErrs.length == 1 && keyErrs.indexOf(KEY_DIFFERENT_USERNAME) == -1)) ?
-          <>
-            <button onClick={()=>handleResetRecords(false)}> Reset </button>
-            <input type="checkbox" checked={direct} onChange={()=>setDirect(!direct)} />  
-            as direct node
-          </> : ""
+        { keyErrs.length 
+            ? <button onClick={()=>navigate('/reset')}> Reset Networking Information </button> 
+            : <button onClick={handleLogin}> Login </button>
         }
       </div>
 
-      <button disabled={( !!keyErrs.length || !!pwErr || !!pwVet )} onClick={handleLogin}> Submit </button>
 
     </div></>
   )
