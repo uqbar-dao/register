@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { hooks } from "../connectors/metamask";
-import { QNS_REGISTRY_ADDRESSES, UQ_NFT_ADDRESSES } from "../constants/addresses";
-import { QNSRegistry__factory, UqNFT__factory } from "../abis/types";
+import { QNSRegistry, UqNFT } from "../abis/types";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
 import { ipToNumber } from "../utils/ipToNumber";
@@ -25,9 +24,11 @@ type LoginProps = {
   setDirect: React.Dispatch<React.SetStateAction<boolean>>, 
   setPw: React.Dispatch<React.SetStateAction<string>>,
   setUqName: React.Dispatch<React.SetStateAction<string>>,
+  qns: QNSRegistry,
+  uqNft: UqNFT
 }
 
-function Login({ direct, pw, uqName, setDirect, setPw, setUqName }: LoginProps) {
+function Login({ direct, pw, uqName, setDirect, setPw, setUqName, qns }: LoginProps) {
   const chainId = useChainId();
   const provider = useProvider();
   const navigate = useNavigate();
@@ -58,8 +59,10 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName }: LoginProps) 
       response = await fetch('/has-keyfile', { method: 'GET'})
       data = await response.json()
 
-      setUploadKey(data)
-      setNeedKey(data)
+      console.log("DATA~~", data)
+
+      setUploadKey(!data)
+      setNeedKey(!data)
 
     })()
   }, [])
@@ -192,14 +195,6 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName }: LoginProps) 
 
   };
 
-  if (!chainId) return <p>connect your wallet</p>
-  if (!provider) return <p>idk whats wrong</p>
-  if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
-
-  const uqNft = UqNFT__factory
-    .connect(UQ_NFT_ADDRESSES[chainId], provider.getSigner());
-  const qns = QNSRegistry__factory
-    .connect(QNS_REGISTRY_ADDRESSES[chainId], provider.getSigner());
 
   const flipUploadKey = () => setUploadKey(needKey || !uploadKey)
 
@@ -279,6 +274,7 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName }: LoginProps) 
             : <button onClick={handleLogin}> Login </button>
         }
       </div>
+            <button onClick={()=>navigate('/')}> home Information </button> 
 
 
     </div></>

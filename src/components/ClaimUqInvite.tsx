@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { hooks } from "../connectors/metamask";
-import { UqNFT__factory } from "../abis/types";
+import { UqNFT } from "../abis/types";
 import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
 import { Link, useNavigate } from "react-router-dom";
 import { ipToNumber } from "../utils/ipToNumber"
@@ -18,19 +18,17 @@ const {
 type ClaimUqNameProps = {
   direct: boolean,
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setUqName: React.Dispatch<React.SetStateAction<string>>
+  setUqName: React.Dispatch<React.SetStateAction<string>>,
+  uqNft: UqNFT
 }
 
-function ClaimUqInvite({ direct, setDirect, setUqName }: ClaimUqNameProps) {
+function ClaimUqInvite({ direct, setDirect, setUqName, uqNft }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
   let navigate = useNavigate();
   let [isLoading, setIsLoading] = useState(false);
   let [loaderMsg, setLoaderMsg] = useState('')
-
-  let uqNftAddress = UQ_NFT_ADDRESSES[chainId!];
-  let uqNft = UqNFT__factory.connect(uqNftAddress, provider!.getSigner());
 
   let [invite, setInvite] = useState('');
   let [inviteValidity, setInviteValidity] = useState('');
@@ -166,7 +164,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName }: ClaimUqNameProps) {
 
   }
 
-  const enterUqNameProps = { name, setName, nameValidities, setNameValidities }
+  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft }
 
   return (
     <>

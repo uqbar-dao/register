@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { hooks } from "../connectors/metamask";
 import { QNS_REGISTRY_ADDRESSES, UQ_NFT_ADDRESSES } from "../constants/addresses";
-import { QNSRegistry__factory, UqNFT__factory } from "../abis/types";
+import { QNSRegistry, UqNFT } from "../abis/types";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
 import { ipToNumber } from "../utils/ipToNumber";
@@ -28,10 +28,12 @@ type ResetProps = {
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setReset: React.Dispatch<React.SetStateAction<boolean>>,
   setPw: React.Dispatch<React.SetStateAction<string>>,
-  setUqName: React.Dispatch<React.SetStateAction<string>>
+  setUqName: React.Dispatch<React.SetStateAction<string>>,
+  qns: QNSRegistry,
+  uqNft: UqNFT
 }
 
-function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setUqName }: ResetProps) {
+function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setUqName, uqNft, qns }: ResetProps) {
   const chainId = useChainId();
   const accounts = useAccounts();
   const provider = useProvider();
@@ -192,14 +194,6 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
     }
 
   }
-
-  if (!chainId) return <p>connect your wallet</p>
-  if (!provider) return <p>idk whats wrong</p>
-  if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
-  const uqNft = UqNFT__factory
-    .connect(UQ_NFT_ADDRESSES[chainId], provider.getSigner());
-  const qns = QNSRegistry__factory
-    .connect(QNS_REGISTRY_ADDRESSES[chainId], provider.getSigner());
 
   const flipUploadKey = () => setUploadKey(needKey || !uploadKey)
 

@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from "react";
-import type { Identity } from "../App";
-import { useNavigate } from "react-router-dom";
 
 type SetPasswordProps = {
   direct: boolean

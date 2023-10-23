@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { hooks } from "../connectors/metamask";
-import { UqNFT__factory, QNSRegistry__factory } from "../abis/types";
+import { UqNFT, QNSRegistry } from "../abis/types";
 import { Link, useNavigate } from "react-router-dom";
 import { toDNSWireFormat } from "../utils/dnsWire";
 import { utils } from 'ethers';
 import { ipToNumber } from "../utils/ipToNumber";
-import { UQ_NFT_ADDRESSES, QNS_REGISTRY_ADDRESSES } from "../constants/addresses";
 import EnterUqName from "./EnterUqName";
 import Loader from "./Loader";
 
@@ -18,10 +17,12 @@ const {
 type RegisterUqNameProps = {
   direct: boolean,
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setUqName: React.Dispatch<React.SetStateAction<string>>
+  setUqName: React.Dispatch<React.SetStateAction<string>>,
+  uqNft: UqNFT,
+  qns: QNSRegistry
 }
 
-function RegisterUqName({ direct, setDirect, setUqName }: RegisterUqNameProps) {
+function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns }: RegisterUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
@@ -47,17 +48,7 @@ function RegisterUqName({ direct, setDirect, setUqName }: RegisterUqNameProps) {
     })()
   }, [])
   
-  if (!chainId) return <p>connect your wallet</p>
-  if (!provider) return <p>idk whats wrong</p>
-  if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
-
-  const uqNft = UqNFT__factory.connect(
-    UQ_NFT_ADDRESSES[chainId], provider.getSigner());
-
-  const qns = QNSRegistry__factory.connect(
-    QNS_REGISTRY_ADDRESSES[chainId], provider.getSigner());
-
-  const enterUqNameProps = { name, setName, nameValidities, setNameValidities }
+  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft }
 
   let handleRegister = async () => {
 

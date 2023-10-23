@@ -1,7 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { hooks } from "../connectors/metamask";
-import { UqNFT__factory } from "../abis/types";
-import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
+import { UqNFT } from "../abis/types";
 import isValidDomain from 'is-valid-domain'
 import { hash } from 'eth-ens-namehash'
 import { toAscii } from 'idna-uts46-hx'
@@ -17,23 +16,20 @@ type ClaimUqNameProps = {
   name: string,
   setName: React.Dispatch<React.SetStateAction<string>>
   nameValidities: string[],
-  setNameValidities: React.Dispatch<React.SetStateAction<string[]>>
+  setNameValidities: React.Dispatch<React.SetStateAction<string[]>>,
+  uqNft: UqNFT
 }
 
 function EnterUqName({ 
   name, 
   setName,
   nameValidities,
-  setNameValidities
+  setNameValidities,
+  uqNft
  }: ClaimUqNameProps) {
 
   const chainId = useChainId()
   const provider = useProvider()
-
-  let uqNft = UqNFT__factory.connect(
-    UQ_NFT_ADDRESSES[chainId!],
-    provider!.getSigner()
-  )
 
   const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
   const NAME_LENGTH = "Name must be 9 characters or more"
