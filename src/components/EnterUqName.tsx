@@ -17,7 +17,8 @@ type ClaimUqNameProps = {
   setName: React.Dispatch<React.SetStateAction<string>>
   nameValidities: string[],
   setNameValidities: React.Dispatch<React.SetStateAction<string[]>>,
-  uqNft: UqNFT
+  uqNft: UqNFT,
+  triggerNameCheck: boolean
 }
 
 function EnterUqName({ 
@@ -25,19 +26,14 @@ function EnterUqName({
   setName,
   nameValidities,
   setNameValidities,
-  uqNft
+  uqNft,
+  triggerNameCheck
  }: ClaimUqNameProps) {
-
-  const chainId = useChainId()
-  const provider = useProvider()
 
   const NAME_URL = "Name must be a valid URL without subdomains (A-Z, a-z, 0-9, and punycode)"
   const NAME_LENGTH = "Name must be 9 characters or more"
   const NAME_CLAIMED = "Name is already claimed"
   const NAME_INVALID_PUNY = "Unsupported punycode character"
-
-  const noDots = (e: any) => 
-    e.target.value.indexOf('.') == -1 && setName(e.target.value) 
 
   const debouncer = useRef<NodeJS.Timeout | null>(null)
 
@@ -88,22 +84,25 @@ function EnterUqName({
         setNameValidities(validities)
 
     }, 500)
-  }, [name])
+  }, [name, triggerNameCheck])
 
-    return (
-      <div className="row">
-        <input
-          value={name}
-          onChange={noDots}
-          type="text"
-          required
-          name="uq-name"
-          placeholder="e.g. myname"
-        />
-        <div className="uq">.uq</div>
-        { nameValidities.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
-      </div>
-    )
+  const noDots = (e: any) => e.target.value.indexOf('.') == -1 
+    && setName(e.target.value) 
+
+  return (
+    <div className="row">
+      <input
+        value={name}
+        onChange={noDots}
+        type="text"
+        required
+        name="uq-name"
+        placeholder="e.g. myname"
+      />
+      <div className="uq">.uq</div>
+      { nameValidities.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
+    </div>
+  )
 
 }
 

@@ -235,3 +235,34 @@ label {
     transform: rotate(360deg);
   }
 }
+/* 
+.connect-modal {
+  font-family: "Press Start 2P";
+  background-color: var(--uq-lightpurple);
+  background: var(--uq-lightpurple);
+  border: 1px solid var(--uq-pink);
+  border-radius: 4px;
+  padding: 1em;
+  box-sizing: border-box;
+  width: 50%; 
+  height: 30%;
+  margin: auto;
+  overflow: auto;
+  top: 10%;
+  left: 25%;
+} */
+
+.connect-modal {
+  display: flex;
+  justify-content: center;
+  align-items:center;
+}
+
+.connect-modal-content {
+  width: 300px;
+  height: 200px;
+  background: var(--uq-darkpurple);
+  padding: 20px;
+  position: fixed;
+  top: 150px;
+}

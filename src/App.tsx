@@ -43,6 +43,10 @@ function App() {
   const [navigateToLogin, setNavigateToLogin] = useState<boolean>(false)
   const [initialVisit, setInitialVisit] = useState<boolean>(true)
 
+  const [ connectOpen, setConnectOpen ] = useState<boolean>(false);
+  const openConnect = () => setConnectOpen(true)
+  const closeConnect = () => setConnectOpen(false)
+
   const [ uqNft, setUqNft ] = useState<UqNFT>(
     UqNFT__factory.connect(
       UQ_NFT_ADDRESSES[ChainId.SEPOLIA], 
@@ -92,7 +96,7 @@ function App() {
     pw, setPw, 
     uqName, setUqName,
     uqNft, qns,
-    setInitialVisit
+    connectOpen, openConnect, closeConnect, 
   }
 
   console.log("navigate to login", navigateToLogin)
@@ -101,7 +105,7 @@ function App() {
     <>
       {
         <>
-        <ConnectWallet/> 
+        <ConnectWallet {...props}/> 
         <Router>
           <Routes>
             <Route path="/" element={navigateToLogin 

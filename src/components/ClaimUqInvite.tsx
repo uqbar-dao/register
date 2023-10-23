@@ -19,16 +19,20 @@ type ClaimUqNameProps = {
   direct: boolean,
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setUqName: React.Dispatch<React.SetStateAction<string>>,
-  uqNft: UqNFT
+  uqNft: UqNFT,
+  openConnect: () => void,
 }
 
-function ClaimUqInvite({ direct, setDirect, setUqName, uqNft }: ClaimUqNameProps) {
+function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: ClaimUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
   let navigate = useNavigate();
   let [isLoading, setIsLoading] = useState(false);
   let [loaderMsg, setLoaderMsg] = useState('')
+
+  const [triggerNameCheck, setTriggerNameCheck] = useState<boolean>(false)
+  useEffect(()=> setTriggerNameCheck(!triggerNameCheck), [provider])
 
   let [invite, setInvite] = useState('');
   let [inviteValidity, setInviteValidity] = useState('');
@@ -71,11 +75,10 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft }: ClaimUqNameProps
     })()
   }, []);
 
-  if (!chainId) return <p>connect your wallet</p>
-  if (!provider) return <p>idk whats wrong</p>
-  if (!(chainId in UQ_NFT_ADDRESSES)) return <p>change networks</p>
-
   let handleRegister = async () => {
+
+    if (!provider) 
+      return openConnect()
 
     if (nameValidities.length != 0 || inviteValidity != '') return
     if (!name || !invite) {
@@ -164,7 +167,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft }: ClaimUqNameProps
 
   }
 
-  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft }
+  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
 
   return (
     <>

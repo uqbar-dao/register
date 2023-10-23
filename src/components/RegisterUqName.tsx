@@ -19,10 +19,11 @@ type RegisterUqNameProps = {
   setDirect: React.Dispatch<React.SetStateAction<boolean>>,
   setUqName: React.Dispatch<React.SetStateAction<string>>,
   uqNft: UqNFT,
-  qns: QNSRegistry
+  qns: QNSRegistry,
+  openConnect: () => void,
 }
 
-function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns }: RegisterUqNameProps) {
+function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect }: RegisterUqNameProps) {
   let chainId = useChainId();
   let accounts = useAccounts();
   let provider = useProvider();
@@ -37,6 +38,10 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns }: RegisterUq
   const [port, setPort] = useState<number>(0)
   const [routers, setRouters] = useState<string[]>([])
 
+  const [triggerNameCheck, setTriggerNameCheck] = useState<boolean>(false)
+
+  useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider])
+
   useEffect(() => {
     (async () => {
       const response = await fetch('/info', { method: 'GET'})
@@ -48,9 +53,12 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns }: RegisterUq
     })()
   }, [])
   
-  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft }
+  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
 
   let handleRegister = async () => {
+
+    if (!provider) 
+      return openConnect()
 
     const wsTx = await qns.populateTransaction.setWsRecord(
         utils.namehash(`${name}.uq`),
