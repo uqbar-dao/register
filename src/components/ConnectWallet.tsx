@@ -68,6 +68,7 @@ export default function ConnectWallet({ connectOpen, closeConnect }: ConnectWall
       isOpen={connectOpen} 
       onRequestClose={closeConnect}
       className="connect-modal"
+      overlayClassName="overlay-modal"
     >
       <div className="connect-modal-content">
         <button onClick={async () => (await metaMask.activate(), closeConnect())} disabled={isActivating} >

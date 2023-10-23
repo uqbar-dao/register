@@ -110,7 +110,7 @@ function App() {
           <Routes>
             <Route path="/" element={navigateToLogin 
               ? <Navigate to="/login" replace />
-              : <UqHome/>
+              : <UqHome {...props} />
             } />
             <Route path="/login" element={<Login {...props} />} />
             <Route path="/reset" element={<Reset {...props}/>} />
