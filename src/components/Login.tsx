@@ -174,17 +174,6 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName, qns, openConne
         })
       })
 
-      if (!needKey) {
-        const base64Keyfile = await response.json()
-        let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${uqName}.keyfile`)
-        document.body.appendChild(link);
-        link.click();
-      }
-
       const interval = setInterval(async () => {
         const homepageResult = await fetch('/') 
         if (homepageResult.status < 400) {
