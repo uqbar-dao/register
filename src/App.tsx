@@ -15,7 +15,6 @@ import SetPassword from "./components/SetPassword";
 import Login from './components/Login'
 import Reset from './components/Reset'
 import UqHome from "./components/UqHome"
-import { useWeb3React } from "@web3-react/core";
 
 export type Identity = {
   name: string,
@@ -49,7 +48,7 @@ function App() {
 
   const [ uqNft, setUqNft ] = useState<UqNFT>(
     UqNFT__factory.connect(
-      UQ_NFT_ADDRESSES[ChainId.SEPOLIA], 
+      UQ_NFT_ADDRESSES[ChainId.SEPOLIA],
       new ethers.providers.JsonRpcProvider(process.env.REACT_APP_RPC_URL))
   );
 
@@ -77,7 +76,7 @@ function App() {
   useEffect(() => {
     if (provider) {
       setUqNft(UqNFT__factory.connect(
-        UQ_NFT_ADDRESSES[ChainId.SEPOLIA], 
+        UQ_NFT_ADDRESSES[ChainId.SEPOLIA],
         provider!.getSigner())
       )
       setQns(QNSRegistry__factory.connect(
@@ -88,15 +87,16 @@ function App() {
   }, [provider])
 
   // just pass all the props each time since components won't mind extras
-  const props = { 
-    direct, setDirect, 
-    key, 
-    keyFileName, setKeyFileName, 
+  const props = {
+    direct, setDirect,
+    key,
+    keyFileName, setKeyFileName,
     reset, setReset,
-    pw, setPw, 
+    pw, setPw,
     uqName, setUqName,
     uqNft, qns,
-    connectOpen, openConnect, closeConnect, 
+    connectOpen, openConnect, closeConnect,
+    provider,
   }
 
   console.log("navigate to login", navigateToLogin)
@@ -105,10 +105,10 @@ function App() {
     <>
       {
         <>
-        <ConnectWallet {...props}/> 
+        <ConnectWallet {...props}/>
         <Router>
           <Routes>
-            <Route path="/" element={navigateToLogin 
+            <Route path="/" element={navigateToLogin
               ? <Navigate to="/login" replace />
               : <UqHome {...props} />
             } />

@@ -41,7 +41,7 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
 
   const [triggerNameCheck, setTriggerNameCheck] = useState<boolean>(false)
 
-  useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider])
+  useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async () => {
@@ -53,12 +53,12 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
       setPort(data.ws_routing[1])
     })()
   }, [])
-  
+
   const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
 
   let handleRegister = async () => {
 
-    if (!provider) 
+    if (!provider)
       return openConnect()
 
     const wsTx = await qns.populateTransaction.setWsRecord(
@@ -72,8 +72,8 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
     const dnsFormat = toDNSWireFormat(`${name}.uq`);
     const tx = await uqNft.register(
       dnsFormat,
-      accounts![0], 
-      [wsTx.data!]
+      accounts![0],
+      {from: wsTx.data!}
     )
 
     setIsLoading(true);
@@ -81,15 +81,15 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
     setIsLoading(false);
     setUqName(`${name}.uq`);
     navigate("/set-password");
-
   }
 
   return (
     <>
     <UqHeader msg="Register Uqbar Node" openConnect={openConnect} />
     <div id="signup-form" className="col">
-    {
-        isLoading ? <Loader msg="Registering QNS ID"/> :
+      {isLoading ? (
+        <Loader msg="Registering QNS ID"/>
+      ) : (
         <>
           <div className="row">
             <h4>Set up your Uqbar node with a .uq name</h4>
@@ -99,16 +99,18 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
             </div>
           </div>
           <EnterUqName { ...enterUqNameProps } />
-          <label htmlFor="direct">
-            Register as a direct node (only do this if you are hosting your node somewhere stable)
-          </label>
-          <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
-          <button disabled={nameValidities.length != 0} onClick={handleRegister}>
+          <div className="row" style={{ marginTop: '1em' }}>
+            <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+            <label htmlFor="direct" className="direct-node-message">
+              Register as a direct node (only do this if you are hosting your node somewhere stable)
+            </label>
+          </div>
+          <button disabled={nameValidities.length !== 0} onClick={handleRegister}>
             Register Uqname
           </button>
-          <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
+          <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
         </>
-      }
+      )}
     </div>
     </>
   )
