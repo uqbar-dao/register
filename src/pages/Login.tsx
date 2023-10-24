@@ -45,7 +45,7 @@ function Login({
   const [keyErrs, setKeyErrs] = useState<string[]>([]);
 
   const [pwErr, setPwErr] = useState<string>('');
-  const [pwVet, setPwVet] = useState<string>('');
+  const [pwVet, setPwVet] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -74,7 +74,8 @@ function Login({
         }),
       });
 
-      setPwVet("");
+      console.log("set pw vet true");
+      setPwVet(true);
 
       const data = await response.json();
 
@@ -99,7 +100,8 @@ function Login({
 
       setKeyErrs(errs);
     } catch {
-      setPwVet("Password is incorrect");
+      console.log("set pw vet false");
+      setPwVet(false);
     }
   }, [localKey, pw, keyErrs, ipAddr, qns, setUqName, setDirect]);
 
@@ -110,9 +112,11 @@ function Login({
     pwDebouncer.current = setTimeout(async () => {
       if (pw != "") {
         if (pw.length < 6)
-          setPwErr("Password must be at least 6 characteers")
-        else
+          setPwErr("Password must be at least 6 characters")
+        else {
+          setPwErr("")
           handlePassword()
+        }
       }
     }, 500)
 
@@ -144,7 +148,7 @@ function Login({
   };
 
   const handleLogin = async () => {
-    if (keyErrs.length == 0) {
+    if (keyErrs.length == 0 && pwVet) {
       const response = await fetch("/boot", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -168,6 +172,8 @@ function Login({
   };
 
   const flipUploadKey = () => setUploadKey(needKey || !uploadKey);
+
+  console.log("should it show?", !pwVet, 6 <= pw.length, !pwVet && 6 <= pw.length)
 
   return (
     <>
@@ -238,19 +244,6 @@ function Login({
           value={pw}
           onChange={(e) => setPw(e.target.value)}
         />
-        {/* <div className="row">
-          <label style={{ lineHeight: '1.2em', width: 150, marginRight: '1em' }} htmlFor="confirm-password">Confirm Password</label>
-          <input
-            type="password"
-            id="confirm-password"
-            required
-            minLength={6}
-            name="confirm-password"
-            placeholder="Min 6 characters"
-            value={pw2}
-            onChange={(e) => setPw2(e.target.value)}
-          />
-        </div> */}
 
         {pwErr ?? (
           <div className="row">
@@ -258,10 +251,11 @@ function Login({
             <p style={{ color: "red" }}> {pwErr} </p>{" "}
           </div>
         )}
-        {pwVet ?? (
+
+        {(!pwVet && 6 <= pw.length) ?? (
           <div className="row">
             {" "}
-            <p style={{ color: "red" }}> {pwVet} </p>{" "}
+            <p style={{ color: "red" }}> Password is incorrect </p>{" "}
           </div>
         )}
 
