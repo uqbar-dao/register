@@ -74,12 +74,14 @@ function Login({
         }),
       });
 
-      console.log("set pw vet true");
-      setPwVet(true);
+      console.log("before data")
 
       const data = await response.json();
 
       setUqName(data.username);
+
+      console.log("set pw vet true");
+      setPwVet(true);
 
       const errs = [...keyErrs];
 
@@ -99,8 +101,8 @@ function Login({
       }
 
       setKeyErrs(errs);
-    } catch {
-      console.log("set pw vet false");
+    } catch (e) {
+      console.log("set pw vet false", e);
       setPwVet(false);
     }
   }, [localKey, pw, keyErrs, ipAddr, qns, setUqName, setDirect]);
@@ -245,19 +247,22 @@ function Login({
           onChange={(e) => setPw(e.target.value)}
         />
 
+        <>
         {pwErr ?? (
           <div className="row">
             {" "}
             <p style={{ color: "red" }}> {pwErr} </p>{" "}
           </div>
         )}
-
+        </>
+        <>
         {(!pwVet && 6 <= pw.length) ?? (
           <div className="row">
             {" "}
             <p style={{ color: "red" }}> Password is incorrect </p>{" "}
           </div>
         )}
+        </>
 
         <div className="col" style={{ width: '100%' }}>
           {keyErrs.map((x, i) => (
