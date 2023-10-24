@@ -5,9 +5,9 @@ import { Link, useNavigate } from "react-router-dom";
 import { toDNSWireFormat } from "../utils/dnsWire";
 import { utils } from 'ethers';
 import { ipToNumber } from "../utils/ipToNumber";
-import EnterUqName from "./EnterUqName";
-import Loader from "./Loader";
-import UqHeader from "./UqHeader";
+import EnterUqName from "../components/EnterUqName";
+import Loader from "../components/Loader";
+import UqHeader from "../components/UqHeader";
 
 const {
   useChainId,
@@ -85,33 +85,33 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
 
   return (
     <>
-    <UqHeader msg="Register Uqbar Node" openConnect={openConnect} />
-    <div id="signup-form" className="col">
-      {isLoading ? (
-        <Loader msg="Registering QNS ID"/>
-      ) : (
-        <>
-          <div className="row">
-            <h4>Set up your Uqbar node with a .uq name</h4>
-            <div className="tooltip-container">
-              <div className="tooltip-button">&#8505;</div>
-              <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+      <UqHeader msg="Register Uqbar Node" openConnect={openConnect} />
+      {Boolean(provider) && <div id="signup-form" className="col">
+        {isLoading ? (
+          <Loader msg="Registering QNS ID"/>
+        ) : (
+          <>
+            <div className="row">
+              <h4>Set up your Uqbar node with a .uq name</h4>
+              <div className="tooltip-container">
+                <div className="tooltip-button">&#8505;</div>
+                <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+              </div>
             </div>
-          </div>
-          <EnterUqName { ...enterUqNameProps } />
-          <div className="row" style={{ marginTop: '1em' }}>
-            <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
-            <label htmlFor="direct" className="direct-node-message">
-              Register as a direct node (only do this if you are hosting your node somewhere stable)
-            </label>
-          </div>
-          <button disabled={nameValidities.length !== 0} onClick={handleRegister}>
-            Register Uqname
-          </button>
-          <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
-        </>
-      )}
-    </div>
+            <EnterUqName { ...enterUqNameProps } />
+            <div className="row" style={{ marginTop: '1em' }}>
+              <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+              <label htmlFor="direct" className="direct-node-message">
+                Register as a direct node (only do this if you are hosting your node somewhere stable)
+              </label>
+            </div>
+            <button disabled={nameValidities.length !== 0} onClick={handleRegister}>
+              Register Uqname
+            </button>
+            <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
+          </>
+        )}
+      </div>}
     </>
   )
 }

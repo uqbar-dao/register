@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom"
-import UqHeader from "./UqHeader"
+import UqHeader from "../components/UqHeader"
 
 type UqHomeProps = {
     openConnect: () => void
@@ -14,13 +14,13 @@ function UqHome ({ openConnect, provider }: UqHomeProps) {
 
     return (
         <>
-        <UqHeader msg="Welcome to Uqbar" openConnect={openConnect}/>
-        {Boolean(provider) && <div style={{ minWidth: '50vw', width: 400 }}>
+        <UqHeader msg="Welcome to Uqbar" openConnect={openConnect} hideConnect />
+        <div style={{ minWidth: '50vw', width: 400 }}>
             <button onClick={inviteRedir}> Claim Uq Invite </button>
             <button onClick={registerRedir}> Register Uqname </button>
             <button onClick={loginRedir}> Login </button>
             <button onClick={resetRedir}> Reset </button>
-        </div>}
+        </div>
         </>
     )
 }

@@ -4,9 +4,9 @@ import { UqNFT } from "../abis/types";
 import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
 import { Link, useNavigate } from "react-router-dom";
 import { ipToNumber } from "../utils/ipToNumber"
-import EnterUqName from "./EnterUqName";
-import Loader from "./Loader";
-import UqHeader from "./UqHeader"
+import EnterUqName from "../components/EnterUqName";
+import Loader from "../components/Loader";
+import UqHeader from "../components/UqHeader"
 
 global.Buffer = global.Buffer || require('buffer').Buffer;
 
@@ -171,48 +171,48 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
 
   return (
     <>
-    <UqHeader msg="Claim Uqbar Invite" openConnect={openConnect} />
-    <div id="signup-form" className="col">
-    {
-        isLoading? <Loader msg={loaderMsg}/> :
-        <>
-          <div className="row">
-            <h4>Set up your Uqbar node with a .uq name</h4>
-            <div className="tooltip-container">
-              <div className="tooltip-button">&#8505;</div>
-              <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+      <UqHeader msg="Claim Uqbar Invite" openConnect={openConnect} />
+      {Boolean(provider) && <div id="signup-form" className="col">
+      {
+          isLoading? <Loader msg={loaderMsg}/> :
+          <>
+            <div className="row">
+              <h4>Set up your Uqbar node with a .uq name</h4>
+              <div className="tooltip-container">
+                <div className="tooltip-button">&#8505;</div>
+                <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+              </div>
             </div>
-          </div>
 
-          <div className="row" style={{ width: '100%' }}>
-            <input
-              value={invite}
-              onChange={(e) => setInvite(e.target.value)}
-              type="text"
-              required
-              name="uq-invite"
-              placeholder="invite code"
-            />
-            { inviteValidity != "" && <div className="invite-validity">{inviteValidity}</div> }
-          </div>
+            <div className="row" style={{ width: '100%' }}>
+              <input
+                value={invite}
+                onChange={(e) => setInvite(e.target.value)}
+                type="text"
+                required
+                name="uq-invite"
+                placeholder="invite code"
+              />
+              { inviteValidity != "" && <div className="invite-validity">{inviteValidity}</div> }
+            </div>
 
-          <EnterUqName { ...enterUqNameProps } />
+            <EnterUqName { ...enterUqNameProps } />
 
-          <div className="row" style={{ marginTop: '1em' }}>
-            <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
-            <label htmlFor="direct" className="direct-node-message">
-              Register as a direct node (only do this if you are hosting your node somewhere stable)
-            </label>
-          </div>
+            <div className="row" style={{ marginTop: '1em' }}>
+              <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+              <label htmlFor="direct" className="direct-node-message">
+                Register as a direct node (only do this if you are hosting your node somewhere stable)
+              </label>
+            </div>
 
-          <button disabled={nameValidities.length !== 0 || inviteValidity !== ''} onClick={handleRegister} >
-              Register Uqname
-          </button>
+            <button disabled={nameValidities.length !== 0 || inviteValidity !== ''} onClick={handleRegister} >
+                Register Uqname
+            </button>
 
-          <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
-        </>
-      }
-    </div>
+            <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
+          </>
+        }
+      </div>}
     </>
   )
 }

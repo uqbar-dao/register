@@ -8,8 +8,8 @@ import { ipToNumber } from "../utils/ipToNumber";
 import { toAscii } from 'idna-uts46-hx'
 import { hash } from 'eth-ens-namehash'
 import isValidDomain from 'is-valid-domain'
-import Loader from "./Loader";
-import UqHeader from "./UqHeader";
+import Loader from "../components/Loader";
+import UqHeader from "../components/UqHeader";
 
 import { hexlify, randomBytes } from "ethers/lib/utils";
 
@@ -207,47 +207,49 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
 
   }
 
-  return ( <>
-    <UqHeader msg="Reset Uqbar Node" openConnect={openConnect} />
-    <div id="signup-form" className="col">
-    { loading ? <Loader msg="Resetting Websocket Information"/> : <>
-      <div className="login-row row">
-        Enter .Uq Name
-        <div className="tooltip-container">
-          <div className="tooltip-button">&#8505;</div>
-          <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+  return (
+    <>
+      <UqHeader msg="Reset Uqbar Node" openConnect={openConnect} />
+      {Boolean(provider) && <div id="signup-form" className="col">
+      { loading ? <Loader msg="Resetting Websocket Information"/> : <>
+        <div className="login-row row">
+          Enter .Uq Name
+          <div className="tooltip-container">
+            <div className="tooltip-button">&#8505;</div>
+            <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
+          </div>
         </div>
-      </div>
 
-      <div className="col" style={{ width: '100%' }}>
-        <div style={{display:'flex', alignItems:'center', width: '100%', marginBottom: '1em'}}>
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            type="text"
-            minLength={9}
-            required
-            name="uq-name"
-            placeholder="e.g. myname"
-            style={{ width: '100%', marginRight: 8, }}
-          />
-          .uq
+        <div className="col" style={{ width: '100%' }}>
+          <div style={{display:'flex', alignItems:'center', width: '100%', marginBottom: '1em'}}>
+            <input
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              type="text"
+              minLength={9}
+              required
+              name="uq-name"
+              placeholder="e.g. myname"
+              style={{ width: '100%', marginRight: 8, }}
+            />
+            .uq
+          </div>
+          { nameVets.map((x,i) => <span key={i} className="name-err">{x}</span>) }
         </div>
-        { nameVets.map((x,i) => <span key={i} className="name-err">{x}</span>) }
-      </div>
 
-      <div className="row">
-        <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
-        <label htmlFor="direct" className="direct-node-message">
-          Reset as a direct node (only do this if you are hosting your node somewhere stable)
-        </label>
-      </div>
+        <div className="row">
+          <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+          <label htmlFor="direct" className="direct-node-message">
+            Reset as a direct node (only do this if you are hosting your node somewhere stable)
+          </label>
+        </div>
 
-      <button onClick={()=>handleResetRecords(direct)}> Reset Networking Keys </button>
+        <button onClick={()=>handleResetRecords(direct)}> Reset Networking Keys </button>
 
-      </>
-    }
-    </div> </>
+        </>
+      }
+      </div>}
+    </>
   )
 }
 

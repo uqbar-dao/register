@@ -4,7 +4,7 @@ import { QNSRegistry, UqNFT } from "../abis/types";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
 import { ipToNumber } from "../utils/ipToNumber";
-import UqHeader from "./UqHeader";
+import UqHeader from "../components/UqHeader";
 
 const { useChainId, useProvider } = hooks;
 
