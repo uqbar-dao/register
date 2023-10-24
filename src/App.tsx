@@ -9,12 +9,12 @@ import { ChainId } from "./constants/chainId";
 import { QNSRegistry, QNSRegistry__factory, UqNFT, UqNFT__factory } from "./abis/types";
 import { ethers } from "ethers";
 import ConnectWallet from "./components/ConnectWallet";
-import RegisterUqName from "./components/RegisterUqName";
-import ClaimUqInvite from "./components/ClaimUqInvite";
+import RegisterUqName from "./pages/RegisterUqName";
+import ClaimUqInvite from "./pages/ClaimUqInvite";
 import SetPassword from "./components/SetPassword";
-import Login from './components/Login'
-import Reset from './components/Reset'
-import UqHome from "./components/UqHome"
+import Login from './pages/Login'
+import Reset from './pages/Reset'
+import UqHome from "./pages/UqHome"
 
 export type Identity = {
   name: string,

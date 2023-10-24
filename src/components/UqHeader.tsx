@@ -7,9 +7,7 @@ type UqHeaderProps = {
 }
 
 function UqHeader ({msg, openConnect, hideConnect = false}: UqHeaderProps) {
-
     const { account, isActive } = useWeb3React()
-
 
     return (
         <>
