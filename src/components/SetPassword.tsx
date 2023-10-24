@@ -7,9 +7,10 @@ type SetPasswordProps = {
   reset: boolean,
   uqName: string,
   setPw: React.Dispatch<React.SetStateAction<string>>,
+  appSizeOnLoad: number
 }
 
-function SetPassword({ uqName, direct, pw, reset, setPw }: SetPasswordProps) {
+function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPasswordProps) {
 
   let [pw2, setPw2] = useState('');
   let [error, setError] = useState('');
@@ -52,13 +53,12 @@ function SetPassword({ uqName, direct, pw, reset, setPw }: SetPasswordProps) {
       link.click();
 
       const interval = setInterval(async () => {
-        const homepageResult = await fetch('/') 
-        if (homepageResult.status < 400) {
-          clearInterval(interval)
-          window.location.replace('/')
+        const res = await fetch("/");
+        if (Number(res.headers.get('content-length')) != appSizeOnLoad) {
+          clearInterval(interval);
+          window.location.replace("/");
         }
       }, 2000);
-
     }, 500)
   };
 

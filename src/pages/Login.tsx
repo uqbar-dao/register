@@ -18,6 +18,7 @@ type LoginProps = {
   qns: QNSRegistry;
   uqNft: UqNFT;
   openConnect: () => void;
+  appSizeOnLoad: number
 };
 
 function Login({
@@ -29,6 +30,7 @@ function Login({
   setUqName,
   qns,
   openConnect,
+  appSizeOnLoad
 }: LoginProps) {
   const chainId = useChainId();
   const provider = useProvider();
@@ -46,6 +48,7 @@ function Login({
 
   const [pwErr, setPwErr] = useState<string>('');
   const [pwVet, setPwVet] = useState<boolean>(false);
+  const [pwDebounced, setPwDebounced] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -101,6 +104,7 @@ function Login({
     } catch {
       setPwVet(false);
     }
+    setPwDebounced(true);
   }, [localKey, pw, keyErrs, ipAddr, qns, setUqName, setDirect]);
 
   const pwDebouncer = useRef<NodeJS.Timeout | null>(null);
@@ -146,6 +150,7 @@ function Login({
   };
 
   const handleLogin = async () => {
+
     if (keyErrs.length == 0 && pwVet) {
       const response = await fetch("/boot", {
         method: "PUT",
@@ -160,8 +165,8 @@ function Login({
       });
 
       const interval = setInterval(async () => {
-        const homepageResult = await fetch("/");
-        if (homepageResult.status < 400) {
+        const res = await fetch("/");
+        if (Number(res.headers.get('content-length')) != appSizeOnLoad) {
           clearInterval(interval);
           window.location.replace("/");
         }
@@ -247,7 +252,7 @@ function Login({
             <p style={{ color: "red" }}> {pwErr} </p>{" "}
           </div>
         )}
-        {!pwVet && 6 <= pw.length && (
+        {pwDebounced && !pwVet && 6 <= pw.length && (
           <div className="row">
             {" "}
             <p style={{ color: "red" }}> Password is incorrect </p>{" "}

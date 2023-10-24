@@ -38,6 +38,7 @@ function App() {
   const [reset, setReset] = useState<boolean>(false);
   const [direct, setDirect] = useState<boolean>(false);
   const [uqName, setUqName] = useState<string>('');
+  const [appSizeOnLoad, setAppSizeOnLoad] = useState<number>(0);
 
   const [navigateToLogin, setNavigateToLogin] = useState<boolean>(false)
   const [initialVisit, setInitialVisit] = useState<boolean>(true)
@@ -57,6 +58,10 @@ function App() {
       QNS_REGISTRY_ADDRESSES[ChainId.SEPOLIA],
       new ethers.providers.JsonRpcProvider(process.env.REACT_APP_RPC_URL))
   );
+
+  useEffect(()=> setAppSizeOnLoad(
+    (window.performance.getEntriesByType('navigation') as any)[0].transferSize
+  ), []);
 
   useEffect(() => {
     (async () => {
@@ -96,7 +101,7 @@ function App() {
     uqName, setUqName,
     uqNft, qns,
     connectOpen, openConnect, closeConnect,
-    provider,
+    provider, appSizeOnLoad
   }
 
   return (
