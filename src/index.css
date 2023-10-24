@@ -65,7 +65,7 @@ input[type="password"] {
 
 button {
   width: 100%;
-  padding: 1em;
+  padding: 0.75em 1em;
   margin-bottom: 0.5em;
   border: 1px solid var(--uq-pink);
   border-radius: 4px;
@@ -85,6 +85,12 @@ button:hover {
   border: 1px solid var(--uq-darkpink);
 }
 
+button:disabled {
+  background-color: var(--uq-pink);
+  border: 1px solid var(--uq-pink);
+  cursor: not-allowed;
+}
+
 #signup-page {
   width: 100%;
   height: 100%;
@@ -100,11 +106,13 @@ button:hover {
 }
 
 label {
-  font-size: 0.75em;
+  font-size: 0.8em;
 }
 
 .login-row {
   margin: 1em;
+  margin-left: 0.5em;
+  align-self: flex-start;
 }
 
 .label-row {
@@ -165,7 +173,9 @@ label {
 }
 
 #signup-form {
-  max-width: 420px;
+  width: calc(420px + 2em);
+  max-width: calc(100vw - 2em);
+  padding: 1em;
 }
 
 #signup-form-header {
@@ -239,7 +249,7 @@ label {
     transform: rotate(360deg);
   }
 }
-/* 
+/*
 .connect-modal {
   font-family: "Press Start 2P";
   background-color: var(--uq-lightpurple);
@@ -248,7 +258,7 @@ label {
   border-radius: 4px;
   padding: 1em;
   box-sizing: border-box;
-  width: 50%; 
+  width: 50%;
   height: 30%;
   margin: auto;
   overflow: auto;
@@ -263,7 +273,7 @@ label {
 }
 
 .connect-modal-content {
-  width: 300px;
+  width: 400px;
   height: 200px;
   background: #027;
   padding: 20px;
@@ -276,4 +286,14 @@ label {
   background-color: rgba(255, 255, 255, 0.25);
   position: fixed;
   inset: 0px;
+}
+
+.signup-form {
+  width: 50vw;
+  max-width: 400px;
+}
+
+.direct-node-message {
+  line-height: 1.5em;
+  margin-left: 1em;
 }

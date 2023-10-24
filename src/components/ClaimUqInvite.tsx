@@ -78,7 +78,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
 
   let handleRegister = async () => {
 
-    if (!provider) 
+    if (!provider)
       return openConnect()
 
     if (nameValidities.length != 0 || inviteValidity != '') return
@@ -91,22 +91,22 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
 
     setLoaderMsg('...Building EIP-4337 User Operation')
     setIsLoading(true);
-    
+
     try {
 
       response = await fetch(
         process.env.REACT_APP_BUILD_USER_OP_POST!,
-        { method: 'POST', 
+        { method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
-            name: name+".uq", 
+          body: JSON.stringify({
+            name: name+".uq",
             address: accounts![0],
             networkingKey: networkingKey,
             wsIp: ipAddress,
             wsPort: port,
             routers: routers,
             direct: direct
-          }) 
+          })
         }
       )
 
@@ -178,14 +178,14 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
         isLoading? <Loader msg={loaderMsg}/> :
         <>
           <div className="row">
-            <h4>Set up your Uqbar node with a .uq name.</h4>
+            <h4>Set up your Uqbar node with a .uq name</h4>
             <div className="tooltip-container">
               <div className="tooltip-button">&#8505;</div>
               <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
             </div>
           </div>
 
-          <div className="row">
+          <div className="row" style={{ width: '100%' }}>
             <input
               value={invite}
               onChange={(e) => setInvite(e.target.value)}
@@ -199,17 +199,18 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
 
           <EnterUqName { ...enterUqNameProps } />
 
-          <label htmlFor="direct">
-            Register as a direct node (only do this if you are hosting your node somewhere stable)
-          </label>
-          <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+          <div className="row" style={{ marginTop: '1em' }}>
+            <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+            <label htmlFor="direct" className="direct-node-message">
+              Register as a direct node (only do this if you are hosting your node somewhere stable)
+            </label>
+          </div>
 
-          <button disabled={nameValidities.length != 0 || inviteValidity != ''} onClick={handleRegister} >
+          <button disabled={nameValidities.length !== 0 || inviteValidity !== ''} onClick={handleRegister} >
               Register Uqname
           </button>
 
-          <Link to="/reset" style={{ color:"white" }}>already have an uq-name?</Link>
-
+          <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
         </>
       }
     </div>
