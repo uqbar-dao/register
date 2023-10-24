@@ -86,7 +86,7 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
   const nameDebouncer = useRef<NodeJS.Timeout | null>(null)
   useEffect(()=> {
 
-    if (nameDebouncer.current) 
+    if (nameDebouncer.current)
       clearTimeout(nameDebouncer.current);
 
     nameDebouncer.current = setTimeout(async () => {
@@ -120,7 +120,7 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
             const owner = await uqNft.ownerOf(hash(normalized))
 
             index = vets.indexOf(NAME_NOT_OWNER)
-            if (owner == accounts![0] && index != -1) 
+            if (owner == accounts![0] && index != -1)
               vets.splice(index, 1);
             else if (index == -1 && owner != accounts![0])
               vets.push(NAME_NOT_OWNER);
@@ -135,7 +135,7 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
 
           }
 
-          if (nameVets.length == 0) 
+          if (nameVets.length == 0)
             setUqName(normalized)
 
         }
@@ -149,10 +149,10 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
 
   const handleLogin = async () => {
 
-    const response = await fetch('/boot', { 
+    const response = await fetch('/boot', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
+      body: JSON.stringify({
         keyfile: "",
         reset: true,
         password: pw,
@@ -160,7 +160,7 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
         direct
       })
     })
-    
+
     const base64Keyfile = await response.json()
     let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
     const url = window.URL.createObjectURL(blob)
@@ -171,7 +171,7 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
     link.click();
 
     const interval = setInterval(async () => {
-      const homepageResult = await fetch('/') 
+      const homepageResult = await fetch('/')
       if (homepageResult.status < 400) {
         clearInterval(interval)
         window.location.replace('/')
@@ -182,7 +182,7 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
 
   const handleResetRecords = async (asDirect: boolean) => {
 
-    if (!provider) 
+    if (!provider)
       return openConnect()
 
     const tx = await qns.setWsRecord(
@@ -219,8 +219,8 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
         </div>
       </div>
 
-      <div className="col">
-        <div style={{display:'flex', alignItems:'center'}}>
+      <div className="col" style={{ width: '100%' }}>
+        <div style={{display:'flex', alignItems:'center', width: '100%', marginBottom: '1em'}}>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -229,16 +229,19 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
             required
             name="uq-name"
             placeholder="e.g. myname"
+            style={{ width: '100%', marginRight: 8, }}
           />
           .uq
         </div>
         { nameVets.map((x,i) => <span key={i} className="name-err">{x}</span>) }
       </div>
 
-      <label htmlFor="direct">
-        Reset info as a direct node (only do this if you are hosting your node somewhere stable)
-      </label>
-      <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+      <div className="row">
+        <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+        <label htmlFor="direct" className="direct-node-message">
+          Reset as a direct node (only do this if you are hosting your node somewhere stable)
+        </label>
+      </div>
 
       <button onClick={()=>handleResetRecords(direct)}> Reset Networking Keys </button>
 

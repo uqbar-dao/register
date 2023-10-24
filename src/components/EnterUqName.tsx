@@ -21,8 +21,8 @@ type ClaimUqNameProps = {
   triggerNameCheck: boolean
 }
 
-function EnterUqName({ 
-  name, 
+function EnterUqName({
+  name,
   setName,
   nameValidities,
   setNameValidities,
@@ -39,7 +39,7 @@ function EnterUqName({
 
   useEffect( () => {
 
-    if (debouncer.current) 
+    if (debouncer.current)
       clearTimeout(debouncer.current);
 
     debouncer.current = setTimeout(async () => {
@@ -86,11 +86,11 @@ function EnterUqName({
     }, 500)
   }, [name, triggerNameCheck])
 
-  const noDots = (e: any) => e.target.value.indexOf('.') == -1 
-    && setName(e.target.value) 
+  const noDots = (e: any) => e.target.value.indexOf('.') == -1
+    && setName(e.target.value)
 
   return (
-    <div className="row">
+    <div className="row" style={{ width: '100%' }}>
       <input
         value={name}
         onChange={noDots}
