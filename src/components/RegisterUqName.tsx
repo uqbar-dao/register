@@ -73,7 +73,7 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
     const tx = await uqNft.register(
       dnsFormat,
       accounts![0],
-      {from: wsTx.data!}
+      [ wsTx.data! ]
     )
 
     setIsLoading(true);
