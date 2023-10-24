@@ -12,8 +12,6 @@ function UqHome ({ openConnect, provider }: UqHomeProps) {
     const loginRedir = () => navigate('/login')
     const resetRedir = () => navigate('/reset')
 
-    console.log(provider)
-
     return (
         <>
         <UqHeader msg="Welcome to Uqbar" openConnect={openConnect}/>

@@ -68,7 +68,6 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
     (async () => {
       const response = await fetch('/info', { method: 'GET'})
       const data = await response.json()
-      console.log("data", data)
       setNetworkingKey(data.networking_key)
       setRouters(data.allowed_routers)
       setIpAddress(ipToNumber(data.ws_routing[0]))

@@ -32,8 +32,6 @@ export default function ConnectWallet({ connectOpen, closeConnect }: ConnectWall
   const isActivating = useIsActivating();
   const isActive = useIsActive();
 
-  console.log("connectOpen", connectOpen)
-
   // const activate = useCallback(async () => {
   //   await metaMask.activate().catch(() => {})
 

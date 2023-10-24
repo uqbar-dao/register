@@ -58,8 +58,6 @@ function Login({
       response = await fetch("/has-keyfile", { method: "GET" });
       data = await response.json();
 
-      console.log("DATA~~", data);
-
       setUploadKey(!data);
       setNeedKey(!data);
     })();
@@ -87,7 +85,7 @@ function Login({
       const ws = await qns.ws(namehash(data.username));
 
       let index = errs.indexOf(KEY_WRONG_NET_KEY);
-      if (ws.publicKey != "0x" + data.networking_key) {
+      if (ws.publicKey != data.networking_key) {
         if (index == -1) errs.push(KEY_WRONG_NET_KEY);
       } else if (index != -1) errs.splice(index, 1);
 

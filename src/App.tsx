@@ -99,8 +99,6 @@ function App() {
     provider,
   }
 
-  console.log("navigate to login", navigateToLogin)
-
   return (
     <>
       {

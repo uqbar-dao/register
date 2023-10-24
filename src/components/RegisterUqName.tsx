@@ -63,7 +63,7 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
 
     const wsTx = await qns.populateTransaction.setWsRecord(
         utils.namehash(`${name}.uq`),
-        '0x'+networkingKey,
+        networkingKey,
         direct ? ipAddress : 0,
         direct ? port : 0,
         !direct ? routers.map(x => utils.namehash(x)) : []
