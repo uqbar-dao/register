@@ -74,13 +74,10 @@ function Login({
         }),
       });
 
-      console.log("before data")
-
       const data = await response.json();
 
       setUqName(data.username);
 
-      console.log("set pw vet true");
       setPwVet(true);
 
       const errs = [...keyErrs];
@@ -101,8 +98,7 @@ function Login({
       }
 
       setKeyErrs(errs);
-    } catch (e) {
-      console.log("set pw vet false", e);
+    } catch {
       setPwVet(false);
     }
   }, [localKey, pw, keyErrs, ipAddr, qns, setUqName, setDirect]);
@@ -175,8 +171,6 @@ function Login({
 
   const flipUploadKey = () => setUploadKey(needKey || !uploadKey);
 
-  console.log("should it show?", !pwVet, 6 <= pw.length, !pwVet && 6 <= pw.length)
-
   return (
     <>
       <UqHeader msg="Login to Uqbar" openConnect={openConnect} hideConnect />
@@ -247,22 +241,18 @@ function Login({
           onChange={(e) => setPw(e.target.value)}
         />
 
-        <>
-        {pwErr ?? (
+        {pwErr && (
           <div className="row">
             {" "}
             <p style={{ color: "red" }}> {pwErr} </p>{" "}
           </div>
         )}
-        </>
-        <>
-        {(!pwVet && 6 <= pw.length) ?? (
+        {!pwVet && 6 <= pw.length && (
           <div className="row">
             {" "}
             <p style={{ color: "red" }}> Password is incorrect </p>{" "}
           </div>
         )}
-        </>
 
         <div className="col" style={{ width: '100%' }}>
           {keyErrs.map((x, i) => (
