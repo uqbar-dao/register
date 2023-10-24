@@ -45,7 +45,6 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName, qns, openConne
   const [localKeyFileName, setLocalKeyFileName] = useState<string>('');
   const [keyErrs, setKeyErrs] = useState<string[]>([]);
 
-  const [pw2, setPw2] = useState<string>('');
   const [pwErr, setPwErr] = useState<string>('');
   const [pwVet, setPwVet] = useState<string>('');
 
@@ -76,18 +75,15 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName, qns, openConne
       clearTimeout(pwDebouncer.current);
 
     pwDebouncer.current = setTimeout(async () => {
-      if (pw != "" && pw2 != "") {
+      if (pw != "") {
         if (pw.length < 6)
           setPwErr("Password must be at least 6 characteers")
-        else if (pw == pw2) {
-          setPwErr("")
+        else
           handlePassword()
-        } else 
-          setPwErr("Passwords must match")
-      } 
+      }
     }, 500)
 
-  }, [pw, pw2])
+  }, [pw])
 
   const KEY_WRONG_NET_KEY = "Keyfile does not match public key"
   const KEY_WRONG_IP = "IP Address does not match records"
@@ -237,21 +233,6 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName, qns, openConne
         />
       </div>
 
-      <div className="row">
-        <div className="row label-row">
-          <label htmlFor="confirm-password">Confirm Password</label>
-        </div>
-        <input
-          type="password"
-          id="confirm-password"
-          required minLength={6}
-          name="confirm-password"
-          placeholder="Min 6 characters"
-          value={pw2}
-          onChange={(e) => setPw2(e.target.value)}
-        />
-      </div>
-
       { pwErr ??  <div className="row"> <p style={{color:"red"}}> {pwErr} </p> </div> }
       { pwVet ??  <div className="row"> <p style={{color:"red"}}> {pwVet} </p> </div> }
 
@@ -262,9 +243,6 @@ function Login({ direct, pw, uqName, setDirect, setPw, setUqName, qns, openConne
             : <button onClick={handleLogin}> Login </button>
         }
       </div>
-            <button onClick={()=>navigate('/')}> home Information </button> 
-
-
     </div></>
   )
 }
