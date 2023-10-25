@@ -187,7 +187,7 @@ function Reset({ direct, setDirect, key, keyFileName, pw, setReset, uqName, setU
 
     const tx = await qns.setWsRecord(
       namehash(uqName),
-      `0x${networkingKey}`,
+      networkingKey,
       asDirect ? ipAddr : 0,
       asDirect ? port : 0,
       asDirect ? [] : routers.map(x => namehash(x))
