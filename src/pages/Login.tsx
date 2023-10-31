@@ -93,11 +93,13 @@ function Login({
       } else if (index != -1) errs.splice(index, 1);
 
       index = errs.indexOf(KEY_WRONG_IP);
-      if (ws.ip != 0 && ws.ip != ipAddr) {
-        if (index == -1) errs.push(KEY_WRONG_IP);
+      if (ws.ip == 0) {
+        setDirect(false)
       } else {
-        if (index != -1) errs.splice(index, 1);
-        setDirect(true);
+        if (ws.ip != ipAddr) {
+          if (index == -1) errs.push(KEY_WRONG_IP);
+        }
+        setDirect(true)
       }
 
       setKeyErrs(errs);
