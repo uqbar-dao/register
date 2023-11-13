@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Navigate, BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { Navigate, BrowserRouter as Router, Route, Routes, useParams } from 'react-router-dom';
 import { hooks } from "./connectors/metamask";
 import {
   QNS_REGISTRY_ADDRESSES,
@@ -33,6 +33,7 @@ const {
 function App() {
   const chainId = useChainId();
   const provider = useProvider();
+  const params = useParams()
 
   const [pw, setPw] = useState<string>('');
   const [key, setKey] = useState<string>('');
@@ -47,7 +48,7 @@ function App() {
   const [routers, setRouters] = useState<string[]>([]);
 
   const [navigateToLogin, setNavigateToLogin] = useState<boolean>(false)
-  const [initialVisit, setInitialVisit] = useState<boolean>(true)
+  const [initialVisit, setInitialVisit] = useState<boolean>(!params?.initial)
 
   const [ connectOpen, setConnectOpen ] = useState<boolean>(false);
   const openConnect = () => setConnectOpen(true)
