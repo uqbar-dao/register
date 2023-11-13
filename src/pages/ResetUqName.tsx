@@ -149,7 +149,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
         asDirect ? [] : routers.map(x => namehash(x))
       )
 
-      setLoading("Resetting Websocket Information");
+      setLoading("Resetting Websocket Information...");
 
       await tx.wait();
 
