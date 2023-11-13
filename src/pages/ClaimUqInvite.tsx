@@ -1,52 +1,47 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import { hooks } from "../connectors/metamask";
-import { UqNFT } from "../abis/types";
-import { UQ_NFT_ADDRESSES, } from "../constants/addresses";
 import { Link, useNavigate } from "react-router-dom";
-import { ipToNumber } from "../utils/ipToNumber"
 import EnterUqName from "../components/EnterUqName";
 import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader"
+import { PageProps } from "../lib/types";
 
 global.Buffer = global.Buffer || require('buffer').Buffer;
 
 const {
-  useChainId,
   useAccounts,
   useProvider,
 } = hooks;
 
-type ClaimUqNameProps = {
-  direct: boolean,
-  setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setUqName: React.Dispatch<React.SetStateAction<string>>,
-  uqNft: UqNFT,
-  openConnect: () => void,
+interface ClaimUqNameProps extends PageProps {
+
 }
 
-function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: ClaimUqNameProps) {
-  let chainId = useChainId();
-  let accounts = useAccounts();
-  let provider = useProvider();
-  let navigate = useNavigate();
-  let [isLoading, setIsLoading] = useState(false);
-  let [loaderMsg, setLoaderMsg] = useState('')
+function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect, networkingKey, ipAddress, port, routers }: ClaimUqNameProps) {
+  const accounts = useAccounts();
+  const provider = useProvider();
+  const navigate = useNavigate();
 
+  const [isLoading, setIsLoading] = useState(false);
+  const [loaderMsg, setLoaderMsg] = useState('')
   const [triggerNameCheck, setTriggerNameCheck] = useState<boolean>(false)
+  const [invite, setInvite] = useState('');
+  const [inviteValidity, setInviteValidity] = useState('');
+  const [name, setName] = useState('');
+  const [nameValidities, setNameValidities] = useState<string[]>([])
+
   useEffect(()=> setTriggerNameCheck(!triggerNameCheck), [provider])
 
-  let [invite, setInvite] = useState('');
-  let [inviteValidity, setInviteValidity] = useState('');
   useEffect(() => {
     (async() => {
 
-      if (invite != "") {
+      if (invite !== "") {
 
         const url = process.env.REACT_APP_INVITE_GET + invite
 
         const response = await fetch(url, { method: 'GET', })
 
-        if (response!.status == 200) {
+        if (response!.status === 200) {
           setInviteValidity("")
         } else {
           setInviteValidity(await response.text())
@@ -56,31 +51,13 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
     })()
   }, [invite])
 
-  let [name, setName] = useState('');
-  let [nameValidities, setNameValidities] = useState<string[]>([])
+  let handleRegister = async (e: FormEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
 
-  const [ networkingKey, setNetworkingKey ] = useState<string>("")
-  const [ routers, setRouters ] = useState<string[]>([])
-  const [ ipAddress, setIpAddress ] = useState<number>(0)
-  const [ port, setPort ] = useState<number>(0)
+    if (!provider) return openConnect()
 
-  useEffect(() => {
-    (async () => {
-      const response = await fetch('/info', { method: 'GET'})
-      const data = await response.json()
-      setNetworkingKey(data.networking_key)
-      setRouters(data.allowed_routers)
-      setIpAddress(ipToNumber(data.ws_routing[0]))
-      setPort(data.ws_routing[1])
-    })()
-  }, []);
-
-  let handleRegister = async () => {
-
-    if (!provider)
-      return openConnect()
-
-    if (nameValidities.length != 0 || inviteValidity != '') return
+    if (nameValidities.length !== 0 || inviteValidity !== '') return
     if (!name || !invite) {
       window.alert('Please enter a name and invite code')
       return false
@@ -92,7 +69,6 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
     setIsLoading(true);
 
     try {
-
       response = await fetch(
         process.env.REACT_APP_BUILD_USER_OP_POST!,
         { method: 'POST',
@@ -110,7 +86,6 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
       )
 
     } catch (e) {
-
       setLoaderMsg('')
       setIsLoading(false)
 
@@ -119,7 +94,6 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
       console.error("error from fetching userOp:", e);
 
       return;
-
     }
 
     setLoaderMsg('...Signing EIP-4337 User Operation')
@@ -134,7 +108,6 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
     data.userOperation.signature = signature
 
     try {
-
       response = await fetch(
         process.env.REACT_APP_BROADCAST_USER_OP_POST!,
         { method: 'POST',
@@ -149,22 +122,18 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
       )
 
     } catch (e) {
-
-      setLoaderMsg('')
-      setIsLoading(false);
       alert(e)
       console.error("error from broadcasting userOp:", e);
       return;
 
+    } finally {
+      setLoaderMsg('')
+      setIsLoading(false);
     }
-
-    setLoaderMsg('')
-    setIsLoading(false);
 
     setUqName(`${name}.uq`);
 
     navigate("/set-password");
-
   }
 
   const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
@@ -172,7 +141,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
   return (
     <>
       <UqHeader msg="Claim Uqbar Invite" openConnect={openConnect} />
-      {Boolean(provider) && <div id="signup-form" className="col">
+      {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleRegister}>
       {
           isLoading? <Loader msg={loaderMsg}/> :
           <>
@@ -193,7 +162,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
                 name="uq-invite"
                 placeholder="invite code"
               />
-              { inviteValidity != "" && <div className="invite-validity">{inviteValidity}</div> }
+              { inviteValidity !== "" && <div className="invite-validity">{inviteValidity}</div> }
             </div>
 
             <EnterUqName { ...enterUqNameProps } />
@@ -205,14 +174,14 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect }: Cla
               </label>
             </div>
 
-            <button disabled={nameValidities.length !== 0 || inviteValidity !== ''} onClick={handleRegister} >
+            <button disabled={nameValidities.length !== 0 || inviteValidity !== ''} type="submit" >
                 Register Uqname
             </button>
 
             <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
           </>
         }
-      </div>}
+      </form>}
     </>
   )
 }

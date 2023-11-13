@@ -90,17 +90,19 @@ function EnterUqName({
     && setName(e.target.value)
 
   return (
-    <div className="row" style={{ width: '100%' }}>
-      <input
-        value={name}
-        onChange={noDots}
-        type="text"
-        required
-        name="uq-name"
-        placeholder="e.g. myname"
-      />
-      <div className="uq">.uq</div>
-      { nameValidities.map((x,i) => <div><br/><span key={i} className="name-validity">{x}</span></div>) }
+    <div className="col" style={{ width: '100%' }}>
+      <div className="row" style={{ width: '100%' }}>
+        <input
+          value={name}
+          onChange={noDots}
+          type="text"
+          required
+          name="uq-name"
+          placeholder="e.g. myname"
+        />
+        <div className="uq">.uq</div>
+      </div>
+      { nameValidities.map((x,i) => <div key={i}><br/><span className="name-validity">{x}</span></div>) }
     </div>
   )
 
