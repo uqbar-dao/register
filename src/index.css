@@ -110,8 +110,7 @@ label {
 }
 
 .login-row {
-  margin: 1em;
-  margin-left: 0.5em;
+  margin: 0.5em;
   align-self: flex-start;
 }
 
@@ -182,6 +181,11 @@ label {
   margin-bottom: 1em;
 }
 
+#signup-form-header button {
+  width: calc(420px + 2em);
+  max-width: calc(100vw - 2em);
+}
+
 #current-address {
   margin-left: 1em;
   font-family: "Courier New", Courier, monospace;
@@ -211,6 +215,10 @@ label {
   max-width: 500px;
   text-align: center;
   line-height: 1.5em;
+}
+
+#loading h3 {
+  text-align: center;
 }
 
 #loader {
@@ -278,7 +286,7 @@ label {
   background: #027;
   padding: 20px;
   position: fixed;
-  top: 150px;
+  top: 120px;
   border-radius: 15px;
 }
 
@@ -296,4 +304,8 @@ label {
 .direct-node-message {
   line-height: 1.5em;
   margin-left: 1em;
+}
+
+.name-validity {
+  color: red;
 }

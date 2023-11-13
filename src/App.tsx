@@ -13,8 +13,10 @@ import RegisterUqName from "./pages/RegisterUqName";
 import ClaimUqInvite from "./pages/ClaimUqInvite";
 import SetPassword from "./components/SetPassword";
 import Login from './pages/Login'
-import Reset from './pages/Reset'
+import Reset from './pages/ResetUqName'
 import UqHome from "./pages/UqHome"
+import ImportKeyfile from "./pages/ImportKeyfile";
+import { ipToNumber } from "./utils/ipToNumber";
 
 export type Identity = {
   name: string,
@@ -39,6 +41,10 @@ function App() {
   const [direct, setDirect] = useState<boolean>(false);
   const [uqName, setUqName] = useState<string>('');
   const [appSizeOnLoad, setAppSizeOnLoad] = useState<number>(0);
+  const [networkingKey, setNetworkingKey] = useState<string>('');
+  const [ipAddress, setIpAddress] = useState<number>(0);
+  const [port, setPort] = useState<number>(0);
+  const [routers, setRouters] = useState<string[]>([]);
 
   const [navigateToLogin, setNavigateToLogin] = useState<boolean>(false)
   const [initialVisit, setInitialVisit] = useState<boolean>(true)
@@ -65,14 +71,22 @@ function App() {
 
   useEffect(() => {
     (async () => {
-      const response = await fetch('/has-keyfile', {method: 'GET'})
-      const data = await response.json()
+      try {
+        const infoData = await fetch('/info', { method: 'GET' }).then(res => res.json())
+        setNetworkingKey(infoData.networking_key)
+        setRouters(infoData.allowed_routers)
+        setIpAddress(ipToNumber(infoData.ws_routing[0]))
+        setPort(infoData.ws_routing[1])
+        setUqName(infoData.name)
 
-      if (!!data && initialVisit) {
-        setNavigateToLogin(true)
-        setInitialVisit(false)
-      }
+        // Returns empty string for username
+        const hasKeyfileData = await fetch('/has-keyfile', {method: 'GET'}).then(res => res.json())
 
+        if (!!hasKeyfileData && initialVisit) {
+          setNavigateToLogin(true)
+          setInitialVisit(false)
+        }
+      } catch {}
     })()
   }, [])
 
@@ -101,7 +115,11 @@ function App() {
     uqName, setUqName,
     uqNft, qns,
     connectOpen, openConnect, closeConnect,
-    provider, appSizeOnLoad
+    provider, appSizeOnLoad,
+    networkingKey, setNetworkingKey,
+    ipAddress, setIpAddress,
+    port, setPort,
+    routers, setRouters,
   }
 
   return (
@@ -115,11 +133,12 @@ function App() {
               ? <Navigate to="/login" replace />
               : <UqHome {...props} />
             } />
-            <Route path="/login" element={<Login {...props} />} />
-            <Route path="/reset" element={<Reset {...props}/>} />
             <Route path="/claim-invite" element={<ClaimUqInvite {...props}/>} />
             <Route path="/register-name" element={<RegisterUqName  {...props}/>} />
             <Route path="/set-password" element={<SetPassword {...props}/>} />
+            <Route path="/reset" element={<Reset {...props}/>} />
+            <Route path="/import-keyfile" element={<ImportKeyfile {...props} />} />
+            <Route path="/login" element={<Login {...props} />} />
           </Routes>
         </Router>
         </>

@@ -1,62 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, FormEvent } from "react";
 import { hooks } from "../connectors/metamask";
-import { UqNFT, QNSRegistry } from "../abis/types";
 import { Link, useNavigate } from "react-router-dom";
 import { toDNSWireFormat } from "../utils/dnsWire";
 import { utils } from 'ethers';
-import { ipToNumber } from "../utils/ipToNumber";
 import EnterUqName from "../components/EnterUqName";
 import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader";
+import { PageProps } from "../lib/types";
 
 const {
   useChainId,
   useAccounts,
-  useProvider,
 } = hooks;
 
-type RegisterUqNameProps = {
-  direct: boolean,
-  setDirect: React.Dispatch<React.SetStateAction<boolean>>,
-  setUqName: React.Dispatch<React.SetStateAction<string>>,
-  uqNft: UqNFT,
-  qns: QNSRegistry,
-  openConnect: () => void,
+interface RegisterUqNameProps extends PageProps {
+
 }
 
-function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect }: RegisterUqNameProps) {
-  let chainId = useChainId();
+function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect, provider, networkingKey, ipAddress, port, routers }: RegisterUqNameProps) {
   let accounts = useAccounts();
-  let provider = useProvider();
   let navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
 
   const [name, setName] = useState('')
   const [nameValidities, setNameValidities] = useState<string[]>([])
 
-  const [networkingKey, setNetworkingKey] = useState<string>('')
-  const [ipAddress, setIpAddress] = useState<number>(0)
-  const [port, setPort] = useState<number>(0)
-  const [routers, setRouters] = useState<string[]>([])
-
   const [triggerNameCheck, setTriggerNameCheck] = useState<boolean>(false)
 
   useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  useEffect(() => {
-    (async () => {
-      const response = await fetch('/info', { method: 'GET'})
-      const data = await response.json()
-      setNetworkingKey(data.networking_key)
-      setRouters(data.allowed_routers)
-      setIpAddress(ipToNumber(data.ws_routing[0]))
-      setPort(data.ws_routing[1])
-    })()
-  }, [])
-
   const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
 
-  let handleRegister = async () => {
+  let handleRegister = async (e: FormEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
 
     if (!provider)
       return openConnect()
@@ -86,7 +63,7 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
   return (
     <>
       <UqHeader msg="Register Uqbar Node" openConnect={openConnect} />
-      {Boolean(provider) && <div id="signup-form" className="col">
+      {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleRegister}>
         {isLoading ? (
           <Loader msg="Registering QNS ID"/>
         ) : (
@@ -105,13 +82,13 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect 
                 Register as a direct node (only do this if you are hosting your node somewhere stable)
               </label>
             </div>
-            <button disabled={nameValidities.length !== 0} onClick={handleRegister}>
+            <button disabled={nameValidities.length !== 0} type="submit">
               Register Uqname
             </button>
             <Link to="/reset" style={{ color:"white", marginTop: '1em' }}>already have an uq-name?</Link>
           </>
         )}
-      </div>}
+      </form>}
     </>
   )
 }
