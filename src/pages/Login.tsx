@@ -136,7 +136,7 @@ function Login({
         <Loader msg={`Logging in to ${uqName}... `} />
       ) : (
         <form id="signup-form" className="col" onSubmit={handleLogin}>
-          <div className="login-row col" style={{ marginBottom: 0, marginLeft: '0.4em' }}> Login as {uqName} </div>
+          <div className="login-row col" style={{ marginLeft: '0.4em' }}> Login as {uqName} </div>
 
           <div className="login-row row" style={{ marginTop: '1em' }}> Enter Password </div>
           <input
