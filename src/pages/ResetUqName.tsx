@@ -30,7 +30,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
 
   const [name, setName] = useState<string>(uqName.slice(0,-3));
   const [nameVets, setNameVets] = useState<string[]>([]);
-  const [loading, setLoading] = useState<boolean>(false);
+  const [loading, setLoading] = useState<string>('');
 
   const [ triggerNameCheck, setTriggerNameCheck ] = useState<boolean>(false)
 
@@ -136,27 +136,33 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
     e.preventDefault();
     e.stopPropagation();
 
-    if (!provider)
-      return openConnect()
+    if (!provider) return openConnect()
 
-    const tx = await qns.setWsRecord(
-      namehash(uqName),
-      networkingKey,
-      asDirect ? ipAddress : 0,
-      asDirect ? port : 0,
-      asDirect ? [] : routers.map(x => namehash(x))
-    )
+    try {
+      setLoading("Please confirm the transaction in your wallet");
 
-    setLoading(true);
+      const tx = await qns.setWsRecord(
+        namehash(uqName),
+        networkingKey,
+        asDirect ? ipAddress : 0,
+        asDirect ? port : 0,
+        asDirect ? [] : routers.map(x => namehash(x))
+      )
 
-    await tx.wait();
+      setLoading("Resetting Websocket Information...");
 
-    if (pw) handleLogin();
-    else {
-      setReset(true);
-      setLoading(false);
-      setDirect(asDirect);
-      navigate('/set-password');
+      await tx.wait();
+
+      if (pw) handleLogin();
+      else {
+        setReset(true);
+        setLoading('');
+        setDirect(asDirect);
+        navigate('/set-password');
+      }
+    } catch {
+      setLoading('');
+      alert('An error occurred, please try again.')
     }
   }
 
@@ -164,7 +170,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
     <>
       <UqHeader msg="Reset Uqbar Node" openConnect={openConnect} />
       {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleResetRecords(direct)}>
-      { loading ? <Loader msg="Resetting Websocket Information"/> : <>
+      { loading ? <Loader msg={loading}/> : <>
         <div className="login-row row">
           Enter .Uq Name
           <div className="tooltip-container">

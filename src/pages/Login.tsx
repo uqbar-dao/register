@@ -1,6 +1,7 @@
 import React, { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
+
 import UqHeader from "../components/UqHeader";
 import { PageProps } from "../lib/types";
 import Loader from "../components/Loader";
@@ -178,7 +179,11 @@ function Login({
             ) : (
               <>
                 <button type='submit'> Login </button>
-                <button onClick={(e) => {e.stopPropagation(); e.preventDefault(); navigate('/')}}>Main Menu</button>
+                <button onClick={(e) => {
+                  e.stopPropagation();
+                  e.preventDefault();
+                  navigate('/?initial=false', { replace: true });
+                }}>Main Menu</button>
               </>
             )}
           </div>

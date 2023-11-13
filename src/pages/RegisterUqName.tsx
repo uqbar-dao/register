@@ -9,7 +9,6 @@ import UqHeader from "../components/UqHeader";
 import { PageProps } from "../lib/types";
 
 const {
-  useChainId,
   useAccounts,
 } = hooks;
 
@@ -20,7 +19,7 @@ interface RegisterUqNameProps extends PageProps {
 function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect, provider, networkingKey, ipAddress, port, routers }: RegisterUqNameProps) {
   let accounts = useAccounts();
   let navigate = useNavigate();
-  const [isLoading, setIsLoading] = useState(false);
+  const [loading, setLoading] = useState('');
 
   const [name, setName] = useState('')
   const [nameValidities, setNameValidities] = useState<string[]>([])
@@ -35,37 +34,43 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
     e.preventDefault()
     e.stopPropagation()
 
-    if (!provider)
-      return openConnect()
+    if (!provider) return openConnect()
 
-    const wsTx = await qns.populateTransaction.setWsRecord(
-        utils.namehash(`${name}.uq`),
-        networkingKey,
-        direct ? ipAddress : 0,
-        direct ? port : 0,
-        !direct ? routers.map(x => utils.namehash(x)) : []
-    )
+    try {
+      setLoading('Please confirm the transaction in your wallet');
 
-    const dnsFormat = toDNSWireFormat(`${name}.uq`);
-    const tx = await uqNft.register(
-      dnsFormat,
-      accounts![0],
-      [ wsTx.data! ]
-    )
+      const wsTx = await qns.populateTransaction.setWsRecord(
+          utils.namehash(`${name}.uq`),
+          networkingKey,
+          direct ? ipAddress : 0,
+          direct ? port : 0,
+          !direct ? routers.map(x => utils.namehash(x)) : []
+      )
 
-    setIsLoading(true);
-    await tx.wait();
-    setIsLoading(false);
-    setUqName(`${name}.uq`);
-    navigate("/set-password");
+      setLoading('Registering QNS ID...');
+
+      const dnsFormat = toDNSWireFormat(`${name}.uq`);
+      const tx = await uqNft.register(
+        dnsFormat,
+        accounts![0],
+        [ wsTx.data! ]
+      )
+
+      await tx.wait();
+      setLoading('');
+      setUqName(`${name}.uq`);
+      navigate("/set-password");
+    } catch {
+      setLoading('');
+    }
   }
 
   return (
     <>
       <UqHeader msg="Register Uqbar Node" openConnect={openConnect} />
       {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleRegister}>
-        {isLoading ? (
-          <Loader msg="Registering QNS ID"/>
+        {loading ? (
+          <Loader msg={loading} />
         ) : (
           <>
             <div className="row">

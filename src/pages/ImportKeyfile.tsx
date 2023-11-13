@@ -162,8 +162,6 @@ function ImportKeyfile({
     }
   }, [localKey, pw, keyErrs, direct, appSizeOnLoad]);
 
-  console.log(localKey)
-
   return (
     <>
       <UqHeader msg="Import Keyfile" openConnect={openConnect} hideConnect />
