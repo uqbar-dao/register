@@ -82,7 +82,7 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
             </div>
             <EnterUqName { ...enterUqNameProps } />
             <div className="row" style={{ marginTop: '1em' }}>
-              <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
+              <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)} autoFocus/>
               <label htmlFor="direct" className="direct-node-message">
                 Register as a direct node (only do this if you are hosting your node somewhere stable)
               </label>

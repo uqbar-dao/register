@@ -103,6 +103,7 @@ button:disabled {
 .key-err {
   font-size: 12px;
   margin: 1em;
+  color: red;
 }
 
 label {
