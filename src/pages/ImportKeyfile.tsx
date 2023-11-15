@@ -125,18 +125,20 @@ function ImportKeyfile({
 
     try {
       if (keyErrs.length === 0 && localKey !== "") {
-        // const response = await fetch("/vet-keyfile", {
-        //   method: "POST",
-        //   headers: { "Content-Type": "application/json" },
-        //   body: JSON.stringify({
-        //     keyfile: localKey,
-        //     password: pw,
-        //   }),
-        // });
+        const response = await fetch("/vet-keyfile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            keyfile: localKey,
+            password: pw,
+          }),
+        });
 
-        // const data = await response.json();
+        if (response.status > 399) {
+          throw new Error("Incorrect password");
+        }
 
-        await fetch("/boot", {
+        const result = await fetch("/boot", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -147,6 +149,10 @@ function ImportKeyfile({
             direct,
           }),
         });
+
+        if (result.status > 399) {
+          throw new Error("Incorrect password");
+        }
 
         const interval = setInterval(async () => {
           const res = await fetch("/");
@@ -227,14 +233,7 @@ function ImportKeyfile({
                 {x}
               </span>
             ))}
-            {keyErrs.length ? (
-              <button onClick={() => navigate("/reset")}>
-                {" "}
-                Reset Networking Information{" "}
-              </button>
-            ) : (
-              <button type="submit"> Import Keyfile </button>
-            )}
+            <button type="submit"> Import Keyfile </button>
           </div>
           <p style={{ lineHeight: '1.25em', fontFamily: 'Helvetica' }}>
             Please note: if the original node was booted as a direct node (static IP), then you must run this node from the same IP.

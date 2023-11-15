@@ -104,7 +104,20 @@ function Login({
       try {
         setLoading(true);
 
-        await fetch("/boot", {
+        const response = await fetch("/vet-keyfile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            keyfile: '',
+            password: pw,
+          }),
+        });
+
+        if (response.status > 399) {
+          throw new Error("Incorrect password");
+        }
+
+        const result = await fetch("/boot", {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -115,6 +128,10 @@ function Login({
             direct,
           }),
         });
+
+        if (result.status > 399) {
+          throw new Error("Incorrect password");
+        }
 
         const interval = setInterval(async () => {
           const res = await fetch("/");
@@ -150,6 +167,7 @@ function Login({
             placeholder="Min 6 characters"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
+            autoFocus
           />
 
           {pwErr && (
@@ -171,21 +189,18 @@ function Login({
                 {x}
               </span>
             ))}
-            {keyErrs.length ? (
-              <button onClick={() => navigate("/reset")}>
-                {" "}
-                Reset Networking Information{" "}
-              </button>
-            ) : (
-              <>
-                <button type='submit'> Login </button>
-                <button onClick={(e) => {
-                  e.stopPropagation();
-                  e.preventDefault();
-                  navigate('/?initial=false', { replace: true });
-                }}>Main Menu</button>
-              </>
-            )}
+              <button type='submit'> Login </button>
+              <button onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                navigate('/?initial=false', { replace: true });
+              }}>Main Menu</button>
+              {Boolean(keyErrs.length) && (
+                <button onClick={() => navigate("/reset")}>
+                  {" "}
+                  Reset Networking Info{" "}
+                </button>
+              )}
           </div>
         </form>
       )}
