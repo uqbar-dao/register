@@ -125,6 +125,7 @@ function Login({
             reset: false,
             password: pw,
             username: uqName,
+            direct,
           }),
         });
 
