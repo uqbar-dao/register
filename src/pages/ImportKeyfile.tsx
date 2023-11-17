@@ -138,15 +138,12 @@ function ImportKeyfile({
           throw new Error("Incorrect password");
         }
 
-        const result = await fetch("/boot", {
-          method: "PUT",
+        const result = await fetch("/import-keyfile", {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             keyfile: localKey,
-            reset: false,
             password: pw,
-            username: '',
-            direct,
           }),
         });
 

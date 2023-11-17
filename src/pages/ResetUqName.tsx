@@ -102,10 +102,9 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
 
   const handleLogin = async () => {
     const response = await fetch('/boot', {
-      method: 'PUT',
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        keyfile: "",
         reset: true,
         password: pw,
         username: `${name}.uq`,

@@ -33,15 +33,14 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
 
       try {
         const result = await fetch('/boot', {
-          method: 'PUT',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
             password: pw,
-            reset: reset,
+            reset,
             username: uqName,
             direct,
-            keyfile: ""
           })
         })
 
