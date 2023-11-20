@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useRef, useState } from "react";
+import React, { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { hooks } from "../connectors/metamask";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
@@ -23,14 +23,17 @@ interface ResetProps extends PageProps {
 
 }
 
-function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw, setReset, uqName, setUqName, uqNft, qns, openConnect }: ResetProps) {
+function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw, setPw, setReset, uqName, setUqName, uqNft, qns, openConnect }: ResetProps) {
   const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
 
   const [name, setName] = useState<string>(uqName.slice(0,-3));
+  const [error, setError] = useState<string>('');
+  const [txnFinished, setTxnFinished] = useState<boolean>(false);
   const [nameVets, setNameVets] = useState<string[]>([]);
   const [loading, setLoading] = useState<string>('');
+  const isLogin = Boolean(uqName);
 
   const [ triggerNameCheck, setTriggerNameCheck ] = useState<boolean>(false)
 
@@ -100,40 +103,63 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
 
   }, [name, triggerNameCheck])
 
-  const handleLogin = async () => {
-    const response = await fetch('/boot', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        reset: true,
-        password: pw,
-        username: `${name}.uq`,
-        direct
-      })
-    })
+  const handleLogin = useCallback(async () => {
+    try {
+      setLoading('Logging in...');
 
-    const base64Keyfile = await response.json()
-    let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${name}.uq.keyfile`)
-    document.body.appendChild(link);
-    link.click();
+      const response = await fetch("/vet-keyfile", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          keyfile: '',
+          password: pw,
+        }),
+      });
 
-    const interval = setInterval(async () => {
-      const homepageResult = await fetch('/')
-      if (homepageResult.status < 400) {
-        clearInterval(interval)
-        window.location.replace('/')
+      if (response.status > 399) {
+        throw new Error("Incorrect password");
       }
-    }, 2000);
 
-  };
+      const result = await fetch("/login-and-reset", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: pw,
+          direct,
+        }),
+      });
 
-  const handleResetRecords = (asDirect: boolean) => async (e: FormEvent) => {
+      if (result.status > 399) {
+        throw new Error("Incorrect password");
+      }
+
+      const base64Keyfile = await response.json()
+      let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${name}.uq.keyfile`)
+      document.body.appendChild(link);
+      link.click();
+
+      const interval = setInterval(async () => {
+        const homepageResult = await fetch('/')
+        if (homepageResult.status < 400) {
+          clearInterval(interval)
+          window.location.replace('/')
+        }
+      }, 2000);
+    } catch {
+      setError("Incorrect password")
+      setLoading('');
+    }
+  }, [pw, name, direct]);
+
+  const handleResetRecords = useCallback((asDirect: boolean) => async (e: FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
+
+    if (txnFinished) return handleLogin();
 
     if (!provider) return openConnect()
 
@@ -148,12 +174,15 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
         asDirect ? [] : routers.map(x => namehash(x))
       )
 
-      setLoading("Resetting Websocket Information...");
+      setLoading("Resetting networking info...");
 
       await tx.wait();
 
-      if (pw) handleLogin();
-      else {
+      setTxnFinished(true);
+
+      if (isLogin) {
+        handleLogin()
+      } else {
         setReset(true);
         setLoading('');
         setDirect(asDirect);
@@ -163,7 +192,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
       setLoading('');
       alert('An error occurred, please try again.')
     }
-  }
+  }, [isLogin, txnFinished, uqName, networkingKey, ipAddress, port, routers, qns, navigate, setReset, setDirect, provider, openConnect, handleLogin]);
 
   return (
     <>
@@ -188,6 +217,8 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
               name="uq-name"
               placeholder="e.g. myname"
               style={{ width: '100%', marginRight: 8, }}
+              readOnly={isLogin}
+              autoFocus={!isLogin}
             />
             .uq
           </div>
@@ -200,6 +231,26 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
             Reset as a direct node (only do this if you are hosting your node somewhere stable)
           </label>
         </div>
+
+        {isLogin && (
+          <>
+            <div className="login-row row" style={{ marginTop: '1em' }}> Enter Password </div>
+            <input
+              style={{ width: '100%' }}
+              type="password"
+              id="password"
+              required
+              minLength={6}
+              name="password"
+              placeholder="Min 6 characters"
+              value={pw}
+              onChange={(e) => setPw(e.target.value)}
+              autoFocus
+            />
+          </>
+        )}
+
+        {Boolean(error) && <div className="login-row row" style={{ marginTop: '1em', color: 'red' }}> {error} </div>}
 
         <button type="submit"> Reset Networking Keys </button>
 

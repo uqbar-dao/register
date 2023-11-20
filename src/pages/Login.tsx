@@ -25,14 +25,21 @@ function Login({
   const navigate = useNavigate();
 
   const [keyErrs, setKeyErrs] = useState<string[]>([]);
-  const [pwErr, setPwErr] = useState<string>('');
-  const [pwVet, setPwVet] = useState<boolean>(false);
-  const [pwDebounced, setPwDebounced] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handlePassword = useCallback(async () => {
-    return
+  const KEY_WRONG_NET_KEY = "Keyfile does not match public key";
+  const KEY_WRONG_IP = "IP Address does not match records";
+
+  // for if we check router validity in future
+  // const KEY_BAD_ROUTERS = "Routers from records are offline"
+
+  const handleLogin = useCallback(async (e: FormEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
     try {
+      setLoading(true);
+
       const response = await fetch("/vet-keyfile", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -42,106 +49,34 @@ function Login({
         }),
       });
 
-      const data = await response.json();
-
-      setUqName(data.username);
-
-      setPwVet(true);
-
-      const errs = [...keyErrs];
-
-      const ws = await qns.ws(namehash(data.username));
-
-      let index = errs.indexOf(KEY_WRONG_NET_KEY);
-      if (ws.publicKey != data.networking_key) {
-        if (index == -1) errs.push(KEY_WRONG_NET_KEY);
-      } else if (index != -1) errs.splice(index, 1);
-
-      index = errs.indexOf(KEY_WRONG_IP);
-      if(ws.ip == 0)
-        setDirect(false)
-      else {
-        setDirect(true)
-        if (ws.ip != ipAddress && index == -1)
-          errs.push(KEY_WRONG_IP);
+      if (response.status > 399) {
+        throw new Error("Incorrect password");
       }
 
-      setKeyErrs(errs);
+      const result = await fetch("/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          password: pw,
+        }),
+      });
+
+      if (result.status > 399) {
+        throw new Error("Incorrect password");
+      }
+
+      const interval = setInterval(async () => {
+        const res = await fetch("/");
+        if (Number(res.headers.get('content-length')) !== appSizeOnLoad) {
+          clearInterval(interval);
+          window.location.replace("/");
+        }
+      }, 2000);
     } catch {
-      setPwVet(false);
+      setKeyErrs(["Incorrect password"])
+      setLoading(false);
     }
-    setPwDebounced(true);
-  }, [pw, keyErrs, ipAddress, qns, setUqName, setDirect]);
-
-  const pwDebouncer = useRef<NodeJS.Timeout | null>(null);
-  useEffect(() => {
-    if (pwDebouncer.current) clearTimeout(pwDebouncer.current);
-
-    pwDebouncer.current = setTimeout(async () => {
-      if (pw !== "") {
-        if (pw.length < 6)
-          setPwErr("Password must be at least 6 characters")
-        else {
-          setPwErr("")
-          handlePassword()
-        }
-      }
-    }, 500)
-
-  }, [pw])
-
-  const KEY_WRONG_NET_KEY = "Keyfile does not match public key";
-  const KEY_WRONG_IP = "IP Address does not match records";
-
-  // for if we check router validity in future
-  // const KEY_BAD_ROUTERS = "Routers from records are offline"
-
-  const handleLogin = async (e: FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-
-    // if (keyErrs.length === 0 && pwVet) {
-      try {
-        setLoading(true);
-
-        const response = await fetch("/vet-keyfile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            keyfile: '',
-            password: pw,
-          }),
-        });
-
-        if (response.status > 399) {
-          throw new Error("Incorrect password");
-        }
-
-        const result = await fetch("/login", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            password: pw,
-          }),
-        });
-
-        if (result.status > 399) {
-          throw new Error("Incorrect password");
-        }
-
-        const interval = setInterval(async () => {
-          const res = await fetch("/");
-          if (Number(res.headers.get('content-length')) !== appSizeOnLoad) {
-            clearInterval(interval);
-            window.location.replace("/");
-          }
-        }, 2000);
-      } catch {
-        setKeyErrs(["Incorrect password"])
-        setLoading(false);
-      }
-    // }
-  };
+  }, [pw, appSizeOnLoad]);
 
   return (
     <>
@@ -166,19 +101,6 @@ function Login({
             autoFocus
           />
 
-          {pwErr && (
-            <div className="row">
-              {" "}
-              <p style={{ color: "red" }}> {pwErr} </p>{" "}
-            </div>
-          )}
-          {pwDebounced && !pwVet && 6 <= pw.length && (
-            <div className="row">
-              {" "}
-              <p style={{ color: "red" }}> Password is incorrect </p>{" "}
-            </div>
-          )}
-
           <div className="col" style={{ width: '100%' }}>
             {keyErrs.map((x, i) => (
               <span key={i} className="key-err">
@@ -191,12 +113,6 @@ function Login({
                 e.preventDefault();
                 navigate('/?initial=false', { replace: true });
               }}>Main Menu</button>
-              {Boolean(keyErrs.length) && (
-                <button onClick={() => navigate("/reset")}>
-                  {" "}
-                  Reset Networking Info{" "}
-                </button>
-              )}
           </div>
         </form>
       )}

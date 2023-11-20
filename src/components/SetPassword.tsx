@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect, FormEvent, useCallback } from "react";
 import UqHeader from "./UqHeader"
 import Loader from "./Loader";
 
@@ -20,7 +20,7 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
     setError('')
   }, [pw, pw2])
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
 
     if (pw !== pw2) {
@@ -66,7 +66,7 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
         setLoading(false);
       }
     }, 500)
-  };
+  }, [appSizeOnLoad, direct, pw, pw2, reset, uqName]);
 
   return (
     <>
@@ -99,7 +99,8 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
           <input
             type="password"
             id="confirm-password"
-            required minLength={6}
+            required
+            minLength={6}
             name="confirm-password"
             placeholder="Min 6 characters"
             value={pw2}
