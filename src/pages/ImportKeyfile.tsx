@@ -23,6 +23,7 @@ function ImportKeyfile({
   openConnect,
   appSizeOnLoad,
   ipAddress,
+  closeConnect,
 }: ImportKeyfileProps) {
   const navigate = useNavigate();
 
@@ -167,7 +168,7 @@ function ImportKeyfile({
 
   return (
     <>
-      <UqHeader msg="Import Keyfile" openConnect={openConnect} hideConnect />
+      <UqHeader msg="Import Keyfile" openConnect={openConnect} closeConnect={closeConnect} hideConnect />
       {loading ? (
         <Loader msg="Setting up node..." />
       ) : (

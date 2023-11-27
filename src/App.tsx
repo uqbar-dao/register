@@ -11,7 +11,7 @@ import { ethers } from "ethers";
 import ConnectWallet from "./components/ConnectWallet";
 import RegisterUqName from "./pages/RegisterUqName";
 import ClaimUqInvite from "./pages/ClaimUqInvite";
-import SetPassword from "./components/SetPassword";
+import SetPassword from "./pages/SetPassword";
 import Login from './pages/Login'
 import Reset from './pages/ResetUqName'
 import UqHome from "./pages/UqHome"

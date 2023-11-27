@@ -1,6 +1,6 @@
 import React, { useState, useEffect, FormEvent, useCallback } from "react";
-import UqHeader from "./UqHeader"
-import Loader from "./Loader";
+import UqHeader from "../components/UqHeader"
+import Loader from "../components/Loader";
 
 type SetPasswordProps = {
   direct: boolean
@@ -9,9 +9,10 @@ type SetPasswordProps = {
   uqName: string,
   setPw: React.Dispatch<React.SetStateAction<string>>,
   appSizeOnLoad: number
+  closeConnect: () => void
 }
 
-function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPasswordProps) {
+function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad, closeConnect }: SetPasswordProps) {
   const [pw2, setPw2] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -70,7 +71,7 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
 
   return (
     <>
-      <UqHeader msg="Set Uqbar Node Password" openConnect={()=>{}} />
+      <UqHeader msg="Set Uqbar Node Password" openConnect={()=>{}} closeConnect={closeConnect} />
       {loading ? (
         <Loader msg="Setting up node..." />
       ) : (

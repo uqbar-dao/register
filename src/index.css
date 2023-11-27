@@ -16,8 +16,8 @@
   --deep-jungle: #14524c;
   --old-mint: #659792;
   --washed-gray: rgba(0, 0, 0, 0.03);
-  --light-gray: rgba(0, 0, 0, 0.1);
-  --medium-gray: rgba(0, 0, 0, 0.2);
+  --light-gray: rgb(203, 203, 203);
+  --medium-gray: rgb(101, 101, 101);
   --dark-gray: rgba(0, 0, 0, 0.5);
   --charcoal: #333;
 }
@@ -86,8 +86,8 @@ button:hover {
 }
 
 button:disabled {
-  background-color: var(--uq-pink);
-  border: 1px solid var(--uq-pink);
+  background-color: var(--medium-gray);
+  border: 1px solid var(--medium-gray);
   cursor: not-allowed;
 }
 
@@ -309,4 +309,22 @@ label {
 
 .name-validity {
   color: red;
+}
+
+.more-info-direct {
+  margin: 0 1em;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.more-info-direct:hover {
+  color: var(--uq-darkpink);
+}
+
+a {
+  color: var(--uq-pink);
+}
+
+a:hover {
+  color: var(--uq-darkpink);
 }

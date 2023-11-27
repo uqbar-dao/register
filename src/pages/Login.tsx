@@ -21,6 +21,7 @@ function Login({
   openConnect,
   appSizeOnLoad,
   ipAddress,
+  closeConnect,
 }: LoginProps) {
   const navigate = useNavigate();
 
@@ -80,7 +81,7 @@ function Login({
 
   return (
     <>
-      <UqHeader msg="Login to Uqbar" openConnect={openConnect} hideConnect />
+      <UqHeader msg="Login to Uqbar" openConnect={openConnect} closeConnect={closeConnect} hideConnect />
       {loading ? (
         <Loader msg={`Logging in to ${uqName}... `} />
       ) : (
@@ -108,11 +109,11 @@ function Login({
               </span>
             ))}
               <button type='submit'> Login </button>
-              <button onClick={(e) => {
+              {/* <button onClick={(e) => {
                 e.stopPropagation();
                 e.preventDefault();
                 navigate('/?initial=false', { replace: true });
-              }}>Main Menu</button>
+              }}>Main Menu</button> */}
           </div>
         </form>
       )}

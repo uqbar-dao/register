@@ -1,4 +1,4 @@
-import React, { useState, useEffect, FormEvent } from "react";
+import React, { useState, useEffect, FormEvent, useCallback } from "react";
 import { hooks } from "../connectors/metamask";
 import { Link, useNavigate } from "react-router-dom";
 import { toDNSWireFormat } from "../utils/dnsWire";
@@ -16,7 +16,7 @@ interface RegisterUqNameProps extends PageProps {
 
 }
 
-function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect, provider, networkingKey, ipAddress, port, routers }: RegisterUqNameProps) {
+function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect, provider, networkingKey, ipAddress, port, routers, closeConnect }: RegisterUqNameProps) {
   let accounts = useAccounts();
   let navigate = useNavigate();
   const [loading, setLoading] = useState('');
@@ -30,7 +30,7 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
 
   const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
 
-  let handleRegister = async (e: FormEvent) => {
+  let handleRegister = useCallback(async (e: FormEvent) => {
     e.preventDefault()
     e.stopPropagation()
 
@@ -63,19 +63,19 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
     } catch {
       setLoading('');
     }
-  }
+  }, [name, direct, networkingKey, ipAddress, port, routers, accounts, uqNft, qns, navigate, setUqName, provider, openConnect])
 
   return (
     <>
-      <UqHeader msg="Register Uqbar Node" openConnect={openConnect} />
+      <UqHeader msg="Register Uqbar Node" openConnect={openConnect} closeConnect={closeConnect} />
       {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleRegister}>
         {loading ? (
           <Loader msg={loading} />
         ) : (
           <>
-            <div className="row">
-              <h4>Set up your Uqbar node with a .uq name</h4>
-              <div className="tooltip-container">
+            <div className="login-row row" style={{ marginBottom: '1em', lineHeight: 1.5 }}>
+              Set up your Uqbar node with a .uq name
+              <div className="tooltip-container" style={{ marginTop: -4 }}>
                 <div className="tooltip-button">&#8505;</div>
                 <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
               </div>
@@ -84,7 +84,14 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
             <div className="row" style={{ marginTop: '1em' }}>
               <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)} autoFocus/>
               <label htmlFor="direct" className="direct-node-message">
-                Register as a direct node (only do this if you are hosting your node somewhere stable)
+                Direct nodes must have a static IP. If you are unsure leave unchecked.
+
+                <div className="tooltip-container">
+                  <div className="tooltip-button">&#8505;</div>
+                  <div className="tooltip-content">A direct node publishes its own networking information on-chain: IP, port, so on.
+                    An indirect node relies on the service of routers, which are themselves direct nodes.
+                    Only register a direct node if you know what you’re doing and have a public, static IP address.</div>
+                </div>
               </label>
             </div>
             <button disabled={nameValidities.length !== 0} type="submit">
