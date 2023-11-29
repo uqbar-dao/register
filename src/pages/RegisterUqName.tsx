@@ -6,7 +6,8 @@ import { utils } from 'ethers';
 import EnterUqName from "../components/EnterUqName";
 import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader";
-import { PageProps } from "../lib/types";
+import { NetworkingInfo, PageProps } from "../lib/types";
+import { ipToNumber } from "../utils/ipToNumber";
 
 const {
   useAccounts,
@@ -16,7 +17,20 @@ interface RegisterUqNameProps extends PageProps {
 
 }
 
-function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect, provider, networkingKey, ipAddress, port, routers, closeConnect }: RegisterUqNameProps) {
+function RegisterUqName({
+  direct,
+  setDirect,
+  setUqName,
+  uqNft,
+  qns,
+  openConnect,
+  provider,
+  closeConnect,
+  setNetworkingKey,
+  setIpAddress,
+  setPort,
+  setRouters,
+}: RegisterUqNameProps) {
   let accounts = useAccounts();
   let navigate = useNavigate();
   const [loading, setLoading] = useState('');
@@ -39,13 +53,25 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
     try {
       setLoading('Please confirm the transaction in your wallet');
 
+      const { networking_key, ws_routing: [ip_address, port], allowed_routers } =
+        (await fetch('/generate-networking-info', { method: 'POST' }).then(res => res.json())) as NetworkingInfo
+
+      const ipAddress = ipToNumber(ip_address)
+
+      setNetworkingKey(networking_key)
+      setIpAddress(ipAddress)
+      setPort(port)
+      setRouters(allowed_routers)
+
       const wsTx = await qns.populateTransaction.setWsRecord(
           utils.namehash(`${name}.uq`),
-          networkingKey,
+          networking_key,
           direct ? ipAddress : 0,
           direct ? port : 0,
-          !direct ? routers.map(x => utils.namehash(x)) : []
+          !direct ? allowed_routers.map(x => utils.namehash(x)) : []
       )
+
+      console.log(3)
 
       setLoading('Registering QNS ID...');
 
@@ -62,8 +88,9 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
       navigate("/set-password");
     } catch {
       setLoading('');
+      alert('There was an error registering your uq-name, please try again.')
     }
-  }, [name, direct, networkingKey, ipAddress, port, routers, accounts, uqNft, qns, navigate, setUqName, provider, openConnect])
+  }, [name, direct, accounts, uqNft, qns, navigate, setUqName, provider, openConnect, setNetworkingKey, setIpAddress, setPort, setRouters])
 
   return (
     <>
@@ -84,7 +111,7 @@ function RegisterUqName({ direct, setDirect, setUqName, uqNft, qns, openConnect,
             <div className="row" style={{ marginTop: '1em' }}>
               <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)} autoFocus/>
               <label htmlFor="direct" className="direct-node-message">
-                Direct nodes must have a static IP. If you are unsure leave unchecked.
+                Register as a direct node. If you are unsure leave unchecked.
 
                 <div className="tooltip-container">
                   <div className="tooltip-button">&#8505;</div>

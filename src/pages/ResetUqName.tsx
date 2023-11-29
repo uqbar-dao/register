@@ -7,7 +7,8 @@ import { hash } from 'eth-ens-namehash'
 import isValidDomain from 'is-valid-domain'
 import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader";
-import { PageProps } from "../lib/types";
+import { NetworkingInfo, PageProps } from "../lib/types";
+import { ipToNumber } from "../utils/ipToNumber";
 
 const NAME_INVALID_PUNY = "Unsupported punycode character"
 const NAME_NOT_OWNER = "Name does not belong to this wallet"
@@ -23,7 +24,21 @@ interface ResetProps extends PageProps {
 
 }
 
-function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, setReset, uqName, setUqName, uqNft, qns, openConnect, closeConnect }: ResetProps) {
+function Reset({
+  direct,
+  setDirect,
+  setReset,
+  uqName,
+  setUqName,
+  uqNft,
+  qns,
+  openConnect,
+  closeConnect,
+  setNetworkingKey,
+  setIpAddress,
+  setPort,
+  setRouters
+}: ResetProps) {
   const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
@@ -44,10 +59,11 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, set
       clearTimeout(nameDebouncer.current);
 
     nameDebouncer.current = setTimeout(async () => {
+        setNameVets([]);
 
         if (!provider) return
 
-        if (name === "") { setNameVets([]); return; }
+        if (name === "") return
 
         let index: number
         let vets = [...nameVets]
@@ -109,15 +125,25 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, set
     try {
       setLoading("Please confirm the transaction in your wallet");
 
+      const { networking_key, ws_routing: [ip_address, port], allowed_routers } =
+        (await fetch('/generate-networking-info', { method: 'POST' }).then(res => res.json())) as NetworkingInfo
+
+      const ipAddress = ipToNumber(ip_address)
+
+      setNetworkingKey(networking_key)
+      setIpAddress(ipAddress)
+      setPort(port)
+      setRouters(allowed_routers)
+
       const tx = await qns.setWsRecord(
         namehash(uqName),
-        networkingKey,
+        networking_key,
         asDirect ? ipAddress : 0,
         asDirect ? port : 0,
-        asDirect ? [] : routers.map(x => namehash(x))
+        asDirect ? [] : allowed_routers.map(x => namehash(x))
       )
 
-      setLoading("Resetting Websocket Information...");
+      setLoading("Resetting Networking Information...");
 
       await tx.wait();
 
@@ -129,7 +155,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, set
       setLoading('');
       alert('An error occurred, please try again.')
     }
-  }, [provider, uqName, networkingKey, ipAddress, port, routers, setReset, setDirect, navigate, openConnect, qns])
+  }, [provider, uqName, setReset, setDirect, navigate, openConnect, qns, setNetworkingKey, setIpAddress, setPort, setRouters])
 
   return (
     <>
@@ -137,7 +163,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, set
       {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleResetRecords(direct)}>
       { loading ? <Loader msg={loading}/> : <>
         <div className="login-row row">
-          Enter .Uq Name
+          Enter .uq Name
           <div className="tooltip-container">
             <div className="tooltip-button">&#8505;</div>
             <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
@@ -145,7 +171,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, set
         </div>
 
         <div className="col" style={{ width: '100%' }}>
-          <div style={{display:'flex', alignItems:'center', width: '100%', marginBottom: '1em'}}>
+          <div style={{display:'flex', alignItems:'center', width: '100%', marginBottom: '0.5em'}}>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -163,7 +189,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, set
         <div className="row">
           <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
           <label htmlFor="direct" className="direct-node-message">
-            Direct nodes must have a static IP. If you are unsure leave unchecked.
+            Register as a direct node. If you are unsure leave unchecked.
             <div className="tooltip-container">
               <div className="tooltip-button">&#8505;</div>
               <div className="tooltip-content">A direct node publishes its own networking information on-chain: IP, port, so on.

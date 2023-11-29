@@ -30,3 +30,17 @@ export interface PageProps {
   provider?: ethers.providers.Web3Provider,
   appSizeOnLoad: number,
 }
+
+export type NetworkingInfo = {
+  networking_key: string,
+  ws_routing: [
+    ip_address: string,
+    port: number
+  ],
+  allowed_routers: string[]
+}
+
+export type UnencryptedIdentity = {
+  name: string,
+  allowed_routers: string[]
+}

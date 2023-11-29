@@ -328,3 +328,23 @@ a {
 a:hover {
   color: var(--uq-darkpink);
 }
+
+.reset-networking {
+  margin-top: 1em;
+  cursor: pointer;
+  text-decoration: underline;
+  width: 100%;
+  font-size: 0.8em;
+  margin-left: 1em;
+}
+
+.reset-networking:hover {
+  color: var(--uq-darkpink);
+}
+
+.name-err {
+  color: red;
+  font-size: 0.8em;
+  line-height: 1.5em;
+  margin-bottom: 1em;
+}

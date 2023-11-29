@@ -164,7 +164,7 @@ function ImportKeyfile({
       window.alert('An error occurred, please try again.')
       setLoading(false);
     }
-  }, [localKey, pw, keyErrs, direct, appSizeOnLoad]);
+  }, [localKey, pw, keyErrs, appSizeOnLoad]);
 
   return (
     <>
