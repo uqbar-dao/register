@@ -71,8 +71,6 @@ function RegisterUqName({
           !direct ? allowed_routers.map(x => utils.namehash(x)) : []
       )
 
-      console.log(3)
-
       setLoading('Registering QNS ID...');
 
       const dnsFormat = toDNSWireFormat(`${name}.uq`);

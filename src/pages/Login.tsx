@@ -7,6 +7,7 @@ import { NetworkingInfo, PageProps, UnencryptedIdentity } from "../lib/types";
 import Loader from "../components/Loader";
 import { hooks } from "../connectors/metamask";
 import { ipToNumber } from "../utils/ipToNumber";
+import { downloadKeyfile } from "../utils/download-keyfile";
 
 const { useProvider } = hooks;
 
@@ -96,9 +97,6 @@ function Login({
 
       setLoading("Logging in...");
 
-      console.log('direct', direct)
-      console.log('reset', reset)
-
       // Login or confirm new keys
       const result = await fetch(reset ? "/confirm-change-network-keys" : "login", {
         method: "POST",
@@ -109,6 +107,9 @@ function Login({
       if (result.status > 399) {
         throw new Error(await result.text());
       }
+
+      const base64String = await result.json()
+      downloadKeyfile(uqName, base64String)
 
       const interval = setInterval(async () => {
         const res = await fetch("/");

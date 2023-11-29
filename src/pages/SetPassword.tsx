@@ -1,6 +1,7 @@
 import React, { useState, useEffect, FormEvent, useCallback } from "react";
 import UqHeader from "../components/UqHeader"
 import Loader from "../components/Loader";
+import { downloadKeyfile } from "../utils/download-keyfile";
 
 type SetPasswordProps = {
   direct: boolean
@@ -47,13 +48,7 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad, closeCon
 
         const base64String = await result.json()
 
-        let blob = new Blob([base64String], {type: "text/plain;charset=utf-8"});
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${uqName}.keyfile`)
-        document.body.appendChild(link);
-        link.click();
+        downloadKeyfile(uqName, base64String)
 
         const interval = setInterval(async () => {
           const res = await fetch("/");
