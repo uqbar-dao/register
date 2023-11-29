@@ -1,5 +1,4 @@
 import React, { FormEvent, useCallback, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
 
 import UqHeader from "../components/UqHeader";
@@ -29,13 +28,13 @@ function Login({
   uqName,
   setUqName,
 }: LoginProps) {
-  const navigate = useNavigate();
   const provider = useProvider();
 
   const [keyErrs, setKeyErrs] = useState<string[]>([]);
   const [loading, setLoading] = useState<string>('');
   const [showReset, setShowReset] = useState<boolean>(false);
   const [reset, setReset] = useState<boolean>(false);
+  const [restartFlow, setRestartFlow] = useState<boolean>(false);
 
   useEffect(() => {
     (async () => {
@@ -50,14 +49,15 @@ function Login({
   // for if we check router validity in future
   // const KEY_BAD_ROUTERS = "Routers from records are offline"
 
-  const handleLogin = useCallback(async (e: FormEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleLogin = useCallback(async (e?: FormEvent) => {
+    e?.preventDefault();
+    e?.stopPropagation();
 
     try {
       if (reset) {
         if (!provider) {
           setKeyErrs(['Please connect your wallet and try again']);
+          setRestartFlow(true)
           return openConnect()
         }
 
@@ -108,8 +108,10 @@ function Login({
         throw new Error(await result.text());
       }
 
-      const base64String = await result.json()
-      downloadKeyfile(uqName, base64String)
+      if (reset) {
+        const base64String = await result.json()
+        downloadKeyfile(uqName, base64String)
+      }
 
       const interval = setInterval(async () => {
         const res = await fetch("/");

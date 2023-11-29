@@ -113,10 +113,11 @@ function ImportKeyfile({
 
   const keyfileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleKeyUploadClick = async (e: any) => {
+  const handleKeyUploadClick = useCallback(async (e: any) => {
     e.preventDefault();
+    e.stopPropagation();
     keyfileInputRef.current?.click();
-  };
+  }, []);
 
   const handleImportKeyfile = useCallback(async (e: FormEvent) => {
     e.preventDefault();

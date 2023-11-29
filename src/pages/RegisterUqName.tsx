@@ -71,7 +71,7 @@ function RegisterUqName({
           !direct ? allowed_routers.map(x => utils.namehash(x)) : []
       )
 
-      setLoading('Registering QNS ID...');
+      setLoading('Please confirm the transaction in your wallet');
 
       const dnsFormat = toDNSWireFormat(`${name}.uq`);
       const tx = await uqNft.register(
@@ -79,6 +79,8 @@ function RegisterUqName({
         accounts![0],
         [ wsTx.data! ]
       )
+
+      setLoading('Registering QNS ID...');
 
       await tx.wait();
       setLoading('');
