@@ -116,7 +116,7 @@ function Reset({
 
   }, [name, triggerNameCheck]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleResetRecords = useCallback((asDirect: boolean) => async (e: FormEvent) => {
+  const handleResetRecords = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -138,9 +138,9 @@ function Reset({
       const tx = await qns.setWsRecord(
         namehash(uqName),
         networking_key,
-        asDirect ? ipAddress : 0,
-        asDirect ? port : 0,
-        asDirect ? [] : allowed_routers.map(x => namehash(x))
+        direct ? ipAddress : 0,
+        direct ? port : 0,
+        direct ? [] : allowed_routers.map(x => namehash(x))
       )
 
       setLoading("Resetting Networking Information...");
@@ -149,18 +149,18 @@ function Reset({
 
       setReset(true);
       setLoading('');
-      setDirect(asDirect);
+      setDirect(direct);
       navigate('/set-password');
     } catch {
       setLoading('');
       alert('An error occurred, please try again.')
     }
-  }, [provider, uqName, setReset, setDirect, navigate, openConnect, qns, setNetworkingKey, setIpAddress, setPort, setRouters])
+  }, [provider, uqName, setReset, setDirect, navigate, openConnect, qns, direct, setNetworkingKey, setIpAddress, setPort, setRouters])
 
   return (
     <>
       <UqHeader msg="Reset Uqbar Node" openConnect={openConnect} closeConnect={closeConnect} />
-      {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleResetRecords(direct)}>
+      {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleResetRecords}>
       { loading ? <Loader msg={loading}/> : <>
         <div className="login-row row">
           Enter .uq Name

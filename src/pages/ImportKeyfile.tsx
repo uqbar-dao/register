@@ -190,7 +190,7 @@ function ImportKeyfile({
               {" "}
               {localKeyFileName ? localKeyFileName : ".keyfile"}{" "}
             </p>}
-            <button onClick={handleKeyUploadClick}>{localKeyFileName ? "Change" : "Select"} Keyfile</button>
+            <button type="button" onClick={handleKeyUploadClick}>{localKeyFileName ? "Change" : "Select"} Keyfile</button>
             <input
               ref={keyfileInputRef}
               style={{ display: "none" }}

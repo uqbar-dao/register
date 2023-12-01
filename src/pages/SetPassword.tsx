@@ -88,6 +88,7 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad, closeCon
             placeholder="Min 6 characters"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
+            autoFocus
           />
           <div className="row label-row">
             <label htmlFor="confirm-password">Confirm Password</label>
