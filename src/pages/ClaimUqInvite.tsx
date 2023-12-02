@@ -17,7 +17,7 @@ interface ClaimUqNameProps extends PageProps {
 
 }
 
-function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect, networkingKey, ipAddress, port, routers }: ClaimUqNameProps) {
+function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect, networkingKey, ipAddress, port, routers, closeConnect }: ClaimUqNameProps) {
   const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
@@ -30,11 +30,10 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect, netwo
   const [name, setName] = useState('');
   const [nameValidities, setNameValidities] = useState<string[]>([])
 
-  useEffect(()=> setTriggerNameCheck(!triggerNameCheck), [provider])
+  useEffect(()=> setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     (async() => {
-
       if (invite !== "") {
 
         const url = process.env.REACT_APP_INVITE_GET + invite
@@ -140,7 +139,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect, netwo
 
   return (
     <>
-      <UqHeader msg="Claim Uqbar Invite" openConnect={openConnect} />
+      <UqHeader msg="Claim Uqbar Invite" openConnect={openConnect} closeConnect={closeConnect} />
       {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleRegister}>
       {
           isLoading? <Loader msg={loaderMsg}/> :

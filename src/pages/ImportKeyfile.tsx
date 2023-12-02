@@ -23,6 +23,7 @@ function ImportKeyfile({
   openConnect,
   appSizeOnLoad,
   ipAddress,
+  closeConnect,
 }: ImportKeyfileProps) {
   const navigate = useNavigate();
 
@@ -112,10 +113,11 @@ function ImportKeyfile({
 
   const keyfileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleKeyUploadClick = async (e: any) => {
+  const handleKeyUploadClick = useCallback(async (e: any) => {
     e.preventDefault();
+    e.stopPropagation();
     keyfileInputRef.current?.click();
-  };
+  }, []);
 
   const handleImportKeyfile = useCallback(async (e: FormEvent) => {
     e.preventDefault();
@@ -138,15 +140,12 @@ function ImportKeyfile({
           throw new Error("Incorrect password");
         }
 
-        const result = await fetch("/boot", {
-          method: "PUT",
+        const result = await fetch("/import-keyfile", {
+          method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             keyfile: localKey,
-            reset: false,
             password: pw,
-            username: '',
-            direct,
           }),
         });
 
@@ -166,11 +165,11 @@ function ImportKeyfile({
       window.alert('An error occurred, please try again.')
       setLoading(false);
     }
-  }, [localKey, pw, keyErrs, direct, appSizeOnLoad]);
+  }, [localKey, pw, keyErrs, appSizeOnLoad]);
 
   return (
     <>
-      <UqHeader msg="Import Keyfile" openConnect={openConnect} hideConnect />
+      <UqHeader msg="Import Keyfile" openConnect={openConnect} closeConnect={closeConnect} hideConnect />
       {loading ? (
         <Loader msg="Setting up node..." />
       ) : (
@@ -191,7 +190,7 @@ function ImportKeyfile({
               {" "}
               {localKeyFileName ? localKeyFileName : ".keyfile"}{" "}
             </p>}
-            <button onClick={handleKeyUploadClick}>{localKeyFileName ? "Change" : "Select"} Keyfile</button>
+            <button type="button" onClick={handleKeyUploadClick}>{localKeyFileName ? "Change" : "Select"} Keyfile</button>
             <input
               ref={keyfileInputRef}
               style={{ display: "none" }}

@@ -1,6 +1,7 @@
-import React, { useState, useEffect, FormEvent } from "react";
-import UqHeader from "./UqHeader"
-import Loader from "./Loader";
+import React, { useState, useEffect, FormEvent, useCallback } from "react";
+import UqHeader from "../components/UqHeader"
+import Loader from "../components/Loader";
+import { downloadKeyfile } from "../utils/download-keyfile";
 
 type SetPasswordProps = {
   direct: boolean
@@ -9,9 +10,10 @@ type SetPasswordProps = {
   uqName: string,
   setPw: React.Dispatch<React.SetStateAction<string>>,
   appSizeOnLoad: number
+  closeConnect: () => void
 }
 
-function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPasswordProps) {
+function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad, closeConnect }: SetPasswordProps) {
   const [pw2, setPw2] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState<boolean>(false);
@@ -20,7 +22,7 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
     setError('')
   }, [pw, pw2])
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = useCallback(async (e: FormEvent) => {
     e.preventDefault();
 
     if (pw !== pw2) {
@@ -33,27 +35,20 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
 
       try {
         const result = await fetch('/boot', {
-          method: 'PUT',
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
             password: pw,
-            reset: reset,
+            reset,
             username: uqName,
             direct,
-            keyfile: ""
           })
         })
 
         const base64String = await result.json()
 
-        let blob = new Blob([base64String], {type: "text/plain;charset=utf-8"});
-        const url = window.URL.createObjectURL(blob)
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', `${uqName}.keyfile`)
-        document.body.appendChild(link);
-        link.click();
+        downloadKeyfile(uqName, base64String)
 
         const interval = setInterval(async () => {
           const res = await fetch("/");
@@ -67,11 +62,11 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
         setLoading(false);
       }
     }, 500)
-  };
+  }, [appSizeOnLoad, direct, pw, pw2, reset, uqName]);
 
   return (
     <>
-      <UqHeader msg="Set Uqbar Node Password" openConnect={()=>{}} />
+      <UqHeader msg="Set Uqbar Node Password" openConnect={()=>{}} closeConnect={closeConnect} />
       {loading ? (
         <Loader msg="Setting up node..." />
       ) : (
@@ -93,6 +88,7 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
             placeholder="Min 6 characters"
             value={pw}
             onChange={(e) => setPw(e.target.value)}
+            autoFocus
           />
           <div className="row label-row">
             <label htmlFor="confirm-password">Confirm Password</label>
@@ -100,7 +96,8 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad }: SetPas
           <input
             type="password"
             id="confirm-password"
-            required minLength={6}
+            required
+            minLength={6}
             name="confirm-password"
             placeholder="Min 6 characters"
             value={pw2}

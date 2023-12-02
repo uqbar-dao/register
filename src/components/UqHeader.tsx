@@ -1,13 +1,55 @@
 import { useWeb3React } from "@web3-react/core";
+import { hooks, metaMask } from "../connectors/metamask";
+import { useCallback } from "react";
+import { SEPOLIA_OPT_HEX, SEPOLIA_OPT_INT } from "../constants/chainId";
+import Loader from "./Loader";
+
+const {
+    useIsActivating,
+    useIsActive,
+  } = hooks;
 
 type UqHeaderProps = {
     msg: string,
     openConnect: () => void,
-    hideConnect?: boolean
+    closeConnect: () => void
+    hideConnect?: boolean,
 }
 
-function UqHeader ({msg, openConnect, hideConnect = false}: UqHeaderProps) {
+function UqHeader ({msg, openConnect, closeConnect, hideConnect = false}: UqHeaderProps) {
     const { account, isActive } = useWeb3React()
+    const isActivating = useIsActivating();
+
+    const connectWallet = useCallback(async () => {
+        closeConnect()
+        await metaMask.activate().catch(() => {})
+
+        try {
+          const networkId = String(await (window.ethereum as any)?.request({ method: 'net_version' }).catch(() => '0x1'))
+
+          if (networkId !== SEPOLIA_OPT_HEX && networkId !== SEPOLIA_OPT_INT) {
+            const SEPOLIA_DETAILS = {
+              chainId: '0xaa36a7', // Replace with the correct chainId for Sepolia
+              chainName: 'Sepolia Test Network',
+              nativeCurrency: {
+                name: 'Ethereum',
+                symbol: 'ETH',
+                decimals: 18
+              },
+              rpcUrls: ['https://sepolia-infura.brave.com/'], // Replace with Sepolia's RPC URL
+              blockExplorerUrls: ['https://sepolia.etherscan.io'] // Replace with Sepolia's block explorer URL
+            };
+
+            await (window.ethereum as any)?.request({
+              method: 'wallet_addEthereumChain',
+              params: [SEPOLIA_DETAILS]
+            })
+          }
+        } catch (err) {
+          console.error('FAILED TO ADD SEPOLIA:', err)
+        }
+    }, [closeConnect]);
+
 
     return (
         <>
@@ -18,10 +60,18 @@ function UqHeader ({msg, openConnect, hideConnect = false}: UqHeaderProps) {
             </h1>
             {!hideConnect && <div style={{ minWidth: '50vw', width: 400 }}>
                 { isActive
-                    ? <div style={{ textAlign: 'center' }}> Connected as {account?.slice(0,6) + '...' + account?.slice(account.length - 6)}</div>
+                    ? <div style={{ textAlign: 'center', lineHeight: 1.5 }}> Connected as {account?.slice(0,6) + '...' + account?.slice(account.length - 6)}</div>
                     : <div className="col">
                         <div style={{ textAlign: 'center', lineHeight: '1.5em' }}>You must connect to a browser wallet to continue</div>
-                        <button onClick={openConnect}> Connect Wallet </button>
+                        {/* <div style={{ textAlign: 'center', lineHeight: '1.5em' }}>We recommend <a href="https://metamask.io/download.html" target="_blank" rel="noreferrer">MetaMask</a></div> */}
+                        {isActivating ? (
+                            <Loader msg="Approve connection in your wallet" />
+                        ) : (
+                            <button onClick={connectWallet}> Connect Wallet </button>
+                        )}
+                        <div style={{ textAlign: 'center', lineHeight: '1.5em', fontSize: '0.8em', marginTop: '2em' }}>
+                            Uqbar is currently on the Sepolia Testnet, if you need testnet ETH, you can get some from the <a href="https://sepoliafaucet.com/" target="_blank" rel="noreferrer">Sepolia Faucet</a>
+                        </div>
                     </div>
                 }
             </div>}

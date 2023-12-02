@@ -11,27 +11,18 @@ import { ethers } from "ethers";
 import ConnectWallet from "./components/ConnectWallet";
 import RegisterUqName from "./pages/RegisterUqName";
 import ClaimUqInvite from "./pages/ClaimUqInvite";
-import SetPassword from "./components/SetPassword";
+import SetPassword from "./pages/SetPassword";
 import Login from './pages/Login'
 import Reset from './pages/ResetUqName'
 import UqHome from "./pages/UqHome"
 import ImportKeyfile from "./pages/ImportKeyfile";
-import { ipToNumber } from "./utils/ipToNumber";
-
-export type Identity = {
-  name: string,
-  networking_key: string,
-  ws_routing: any[], // (string, number)
-  allowed_routers: string[]
-}
+import { UnencryptedIdentity } from "./lib/types";
 
 const {
-  useChainId,
   useProvider,
 } = hooks;
 
 function App() {
-  const chainId = useChainId();
   const provider = useProvider();
   const params = useParams()
 
@@ -73,23 +64,25 @@ function App() {
   useEffect(() => {
     (async () => {
       try {
-        const infoData = await fetch('/info', { method: 'GET' }).then(res => res.json())
-        setNetworkingKey(infoData.networking_key)
-        setRouters(infoData.allowed_routers)
-        setIpAddress(ipToNumber(infoData.ws_routing[0]))
-        setPort(infoData.ws_routing[1])
-        setUqName(infoData.name)
+        const infoResponse = await fetch('/info', {method: 'GET'})
+        if (infoResponse.status > 399) {
+          console.log('no info, unbooted')
+          return
+        }
 
-        // Returns empty string for username
-        const hasKeyfileData = await fetch('/has-keyfile', {method: 'GET'}).then(res => res.json())
+        const info: UnencryptedIdentity = await infoResponse.json()
 
-        if (!!hasKeyfileData && initialVisit) {
+        if (initialVisit) {
+          setUqName(info.name)
+          setRouters(info.allowed_routers)
           setNavigateToLogin(true)
           setInitialVisit(false)
         }
-      } catch {}
+      } catch {
+        console.log('no info, unbooted')
+      }
     })()
-  }, [])
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => setNavigateToLogin(false), [initialVisit])
 

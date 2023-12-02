@@ -1,4 +1,4 @@
-import React, { FormEvent, useEffect, useRef, useState } from "react";
+import React, { FormEvent, useCallback, useEffect, useRef, useState } from "react";
 import { hooks } from "../connectors/metamask";
 import { useNavigate } from "react-router-dom";
 import { namehash } from "ethers/lib/utils";
@@ -7,7 +7,8 @@ import { hash } from 'eth-ens-namehash'
 import isValidDomain from 'is-valid-domain'
 import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader";
-import { PageProps } from "../lib/types";
+import { NetworkingInfo, PageProps } from "../lib/types";
+import { ipToNumber } from "../utils/ipToNumber";
 
 const NAME_INVALID_PUNY = "Unsupported punycode character"
 const NAME_NOT_OWNER = "Name does not belong to this wallet"
@@ -23,7 +24,21 @@ interface ResetProps extends PageProps {
 
 }
 
-function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw, setReset, uqName, setUqName, uqNft, qns, openConnect }: ResetProps) {
+function Reset({
+  direct,
+  setDirect,
+  setReset,
+  uqName,
+  setUqName,
+  uqNft,
+  qns,
+  openConnect,
+  closeConnect,
+  setNetworkingKey,
+  setIpAddress,
+  setPort,
+  setRouters
+}: ResetProps) {
   const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
@@ -35,7 +50,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
   const [ triggerNameCheck, setTriggerNameCheck ] = useState<boolean>(false)
 
   // so inputs will validate once wallet is connected
-  useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider])
+  useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const nameDebouncer = useRef<NodeJS.Timeout | null>(null)
   useEffect(()=> {
@@ -44,10 +59,11 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
       clearTimeout(nameDebouncer.current);
 
     nameDebouncer.current = setTimeout(async () => {
+        setNameVets([]);
 
         if (!provider) return
 
-        if (name === "") { setNameVets([]); return; }
+        if (name === "") return
 
         let index: number
         let vets = [...nameVets]
@@ -98,41 +114,9 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
 
     }, 500)
 
-  }, [name, triggerNameCheck])
+  }, [name, triggerNameCheck]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleLogin = async () => {
-    const response = await fetch('/boot', {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        keyfile: "",
-        reset: true,
-        password: pw,
-        username: `${name}.uq`,
-        direct
-      })
-    })
-
-    const base64Keyfile = await response.json()
-    let blob = new Blob([base64Keyfile], {type: "text/plain;charset=utf-8"});
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a');
-    link.href = url;
-    link.setAttribute('download', `${name}.uq.keyfile`)
-    document.body.appendChild(link);
-    link.click();
-
-    const interval = setInterval(async () => {
-      const homepageResult = await fetch('/')
-      if (homepageResult.status < 400) {
-        clearInterval(interval)
-        window.location.replace('/')
-      }
-    }, 2000);
-
-  };
-
-  const handleResetRecords = (asDirect: boolean) => async (e: FormEvent) => {
+  const handleResetRecords = useCallback(async (e: FormEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
@@ -141,38 +125,45 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
     try {
       setLoading("Please confirm the transaction in your wallet");
 
+      const { networking_key, ws_routing: [ip_address, port], allowed_routers } =
+        (await fetch('/generate-networking-info', { method: 'POST' }).then(res => res.json())) as NetworkingInfo
+
+      const ipAddress = ipToNumber(ip_address)
+
+      setNetworkingKey(networking_key)
+      setIpAddress(ipAddress)
+      setPort(port)
+      setRouters(allowed_routers)
+
       const tx = await qns.setWsRecord(
         namehash(uqName),
-        networkingKey,
-        asDirect ? ipAddress : 0,
-        asDirect ? port : 0,
-        asDirect ? [] : routers.map(x => namehash(x))
+        networking_key,
+        direct ? ipAddress : 0,
+        direct ? port : 0,
+        direct ? [] : allowed_routers.map(x => namehash(x))
       )
 
-      setLoading("Resetting Websocket Information...");
+      setLoading("Resetting Networking Information...");
 
       await tx.wait();
 
-      if (pw) handleLogin();
-      else {
-        setReset(true);
-        setLoading('');
-        setDirect(asDirect);
-        navigate('/set-password');
-      }
+      setReset(true);
+      setLoading('');
+      setDirect(direct);
+      navigate('/set-password');
     } catch {
       setLoading('');
       alert('An error occurred, please try again.')
     }
-  }
+  }, [provider, uqName, setReset, setDirect, navigate, openConnect, qns, direct, setNetworkingKey, setIpAddress, setPort, setRouters])
 
   return (
     <>
-      <UqHeader msg="Reset Uqbar Node" openConnect={openConnect} />
-      {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleResetRecords(direct)}>
+      <UqHeader msg="Reset Uqbar Node" openConnect={openConnect} closeConnect={closeConnect} />
+      {Boolean(provider) && <form id="signup-form" className="col" onSubmit={handleResetRecords}>
       { loading ? <Loader msg={loading}/> : <>
         <div className="login-row row">
-          Enter .Uq Name
+          Enter .uq Name
           <div className="tooltip-container">
             <div className="tooltip-button">&#8505;</div>
             <div className="tooltip-content">Uqbar nodes use a .uq name in order to identify themselves to other nodes in the network</div>
@@ -180,7 +171,7 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
         </div>
 
         <div className="col" style={{ width: '100%' }}>
-          <div style={{display:'flex', alignItems:'center', width: '100%', marginBottom: '1em'}}>
+          <div style={{display:'flex', alignItems:'center', width: '100%', marginBottom: '0.5em'}}>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -198,7 +189,13 @@ function Reset({ direct, setDirect, networkingKey, ipAddress, port, routers, pw,
         <div className="row">
           <input type="checkbox" id="direct" name="direct" checked={direct} onChange={(e) => setDirect(e.target.checked)}/>
           <label htmlFor="direct" className="direct-node-message">
-            Reset as a direct node (only do this if you are hosting your node somewhere stable)
+            Register as a direct node. If you are unsure leave unchecked.
+            <div className="tooltip-container">
+              <div className="tooltip-button">&#8505;</div>
+              <div className="tooltip-content">A direct node publishes its own networking information on-chain: IP, port, so on.
+                An indirect node relies on the service of routers, which are themselves direct nodes.
+                Only register a direct node if you know what you’re doing and have a public, static IP address.</div>
+            </div>
           </label>
         </div>
 
