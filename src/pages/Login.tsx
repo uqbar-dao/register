@@ -1,5 +1,6 @@
 import React, { FormEvent, useCallback, useEffect, useState } from "react";
 import { namehash } from "ethers/lib/utils";
+import { BytesLike } from "ethers";
 
 import UqHeader from "../components/UqHeader";
 import { NetworkingInfo, PageProps, UnencryptedIdentity } from "../lib/types";
@@ -82,15 +83,18 @@ function Login({
 
         const ipAddress = ipToNumber(ip_address)
 
-        const tx = await qns.setWsRecord(
-          namehash(uqName),
-          networking_key,
-          direct ? ipAddress : 0,
-          direct ? port : 0,
-          direct ? [] : allowed_routers.map(x => namehash(x))
-        )
+        const data: BytesLike[] = [
+          direct
+            ? ( await qns.populateTransaction.setRouters
+                (namehash(uqName), allowed_routers.map(x=>namehash(x))) ).data!
+            : ( await qns.populateTransaction.setAllIp
+                (namehash(uqName), ipAddress, port, 0 ,0 ,0) ).data!,
+          ( await qns.populateTransaction.setKey(namehash(uqName), networking_key)).data!,
+        ]
 
         setLoading("Resetting Networking Information...");
+
+        const tx = await qns.multicall(data)
 
         await tx.wait();
       }
@@ -208,3 +212,4 @@ function Login({
 }
 
 export default Login;
+

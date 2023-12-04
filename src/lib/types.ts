@@ -1,5 +1,5 @@
 import { ethers } from "ethers";
-import { QNSRegistry, UqNFT } from "../abis/types";
+import { QNSRegistryResolver, DotUqRegistrar } from "../abis/types";
 
 export interface PageProps {
   networkingKey: string,
@@ -22,8 +22,8 @@ export interface PageProps {
   setReset: React.Dispatch<React.SetStateAction<boolean>>,
   pw: string,
   setPw: React.Dispatch<React.SetStateAction<string>>,
-  uqNft: UqNFT,
-  qns: QNSRegistry,
+  dotUq: DotUqRegistrar,
+  qns: QNSRegistryResolver,
   connectOpen: boolean,
   openConnect: () => void,
   closeConnect: () => void,

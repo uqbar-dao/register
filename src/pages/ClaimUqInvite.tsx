@@ -13,11 +13,9 @@ const {
   useProvider,
 } = hooks;
 
-interface ClaimUqNameProps extends PageProps {
+interface ClaimUqNameProps extends PageProps { }
 
-}
-
-function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect, networkingKey, ipAddress, port, routers, closeConnect }: ClaimUqNameProps) {
+function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, networkingKey, ipAddress, port, routers, closeConnect }: ClaimUqNameProps) {
   const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
@@ -135,7 +133,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName, uqNft, openConnect, netwo
     navigate("/set-password");
   }
 
-  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
+  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, dotUq, triggerNameCheck }
 
   return (
     <>

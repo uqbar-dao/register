@@ -1,6 +1,6 @@
 import React, { useEffect, useRef } from "react";
 import { hooks } from "../connectors/metamask";
-import { UqNFT } from "../abis/types";
+import { DotUqRegistrar } from "../abis/types";
 import isValidDomain from 'is-valid-domain'
 import { hash } from 'eth-ens-namehash'
 import { toAscii } from 'idna-uts46-hx'
@@ -17,7 +17,7 @@ type ClaimUqNameProps = {
   setName: React.Dispatch<React.SetStateAction<string>>
   nameValidities: string[],
   setNameValidities: React.Dispatch<React.SetStateAction<string[]>>,
-  uqNft: UqNFT,
+  dotUq: DotUqRegistrar,
   triggerNameCheck: boolean
 }
 
@@ -26,7 +26,7 @@ function EnterUqName({
   setName,
   nameValidities,
   setNameValidities,
-  uqNft,
+  dotUq,
   triggerNameCheck
  }: ClaimUqNameProps) {
 
@@ -73,7 +73,7 @@ function EnterUqName({
           index = validities.indexOf(NAME_CLAIMED)
           if (validities.length == 0 || index != -1) {
             try {
-              await uqNft.ownerOf(hash(normalized))
+              await dotUq.ownerOf(hash(normalized))
               if (index == -1) validities.push(NAME_CLAIMED)
             } catch (e) {
               if (index != -1) validities.splice(index, 1)

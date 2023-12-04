@@ -3,10 +3,10 @@ import { Navigate, BrowserRouter as Router, Route, Routes, useParams } from 'rea
 import { hooks } from "./connectors/metamask";
 import {
   QNS_REGISTRY_ADDRESSES,
-  UQ_NFT_ADDRESSES,
+  DOT_UQ_ADDRESSES,
 } from "./constants/addresses";
 import { ChainId } from "./constants/chainId";
-import { QNSRegistry, QNSRegistry__factory, UqNFT, UqNFT__factory } from "./abis/types";
+import { QNSRegistryResolver, QNSRegistryResolver__factory, DotUqRegistrar, DotUqRegistrar__factory } from "./abis/types";
 import { ethers } from "ethers";
 import ConnectWallet from "./components/ConnectWallet";
 import RegisterUqName from "./pages/RegisterUqName";
@@ -45,14 +45,14 @@ function App() {
   const openConnect = () => setConnectOpen(true)
   const closeConnect = () => setConnectOpen(false)
 
-  const [ uqNft, setUqNft ] = useState<UqNFT>(
-    UqNFT__factory.connect(
-      UQ_NFT_ADDRESSES[ChainId.SEPOLIA],
+  const [ dotUq, setDotUq ] = useState<DotUqRegistrar>(
+    DotUqRegistrar__factory.connect(
+      DOT_UQ_ADDRESSES[ChainId.SEPOLIA],
       new ethers.providers.JsonRpcProvider(process.env.REACT_APP_RPC_URL))
   );
 
-  const [ qns, setQns ] = useState<QNSRegistry>(
-    QNSRegistry__factory.connect(
+  const [ qns, setQns ] = useState<QNSRegistryResolver>(
+    QNSRegistryResolver__factory.connect(
       QNS_REGISTRY_ADDRESSES[ChainId.SEPOLIA],
       new ethers.providers.JsonRpcProvider(process.env.REACT_APP_RPC_URL))
   );
@@ -88,11 +88,11 @@ function App() {
 
   useEffect(() => {
     if (provider) {
-      setUqNft(UqNFT__factory.connect(
-        UQ_NFT_ADDRESSES[ChainId.SEPOLIA],
+      setDotUq(DotUqRegistrar__factory.connect(
+        DOT_UQ_ADDRESSES[ChainId.SEPOLIA],
         provider!.getSigner())
       )
-      setQns(QNSRegistry__factory.connect(
+      setQns(QNSRegistryResolver__factory.connect(
         QNS_REGISTRY_ADDRESSES[ChainId.SEPOLIA],
         provider!.getSigner())
       )
@@ -107,7 +107,7 @@ function App() {
     reset, setReset,
     pw, setPw,
     uqName, setUqName,
-    uqNft, qns,
+    dotUq, qns,
     connectOpen, openConnect, closeConnect,
     provider, appSizeOnLoad,
     networkingKey, setNetworkingKey,

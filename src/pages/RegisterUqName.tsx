@@ -2,7 +2,7 @@ import React, { useState, useEffect, FormEvent, useCallback } from "react";
 import { hooks } from "../connectors/metamask";
 import { Link, useNavigate } from "react-router-dom";
 import { toDNSWireFormat } from "../utils/dnsWire";
-import { utils } from 'ethers';
+import { BytesLike, utils } from 'ethers';
 import EnterUqName from "../components/EnterUqName";
 import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader";
@@ -21,7 +21,7 @@ function RegisterUqName({
   direct,
   setDirect,
   setUqName,
-  uqNft,
+  dotUq,
   qns,
   openConnect,
   provider,
@@ -42,7 +42,7 @@ function RegisterUqName({
 
   useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, uqNft, triggerNameCheck }
+  const enterUqNameProps = { name, setName, nameValidities, setNameValidities, dotUq, triggerNameCheck }
 
   let handleRegister = useCallback(async (e: FormEvent) => {
     e.preventDefault()
@@ -63,21 +63,22 @@ function RegisterUqName({
       setPort(port)
       setRouters(allowed_routers)
 
-      const wsTx = await qns.populateTransaction.setWsRecord(
-          utils.namehash(`${name}.uq`),
-          networking_key,
-          direct ? ipAddress : 0,
-          direct ? port : 0,
-          !direct ? allowed_routers.map(x => utils.namehash(x)) : []
-      )
+      const data: BytesLike[] = [
+        direct 
+          ? ( await qns.populateTransaction.setRouters
+              (utils.namehash(`${name}.uq`), allowed_routers.map(x => utils.namehash(x)))).data!
+          : ( await qns.populateTransaction.setAllIp
+              ( utils.namehash(`${name}.uq`), ipAddress, port, 0, 0 , 0) ).data!,
+        ( await qns.populateTransaction.setKey(utils.namehash(`${name}.uq`), networking_key)).data!
+      ]
 
       setLoading('Please confirm the transaction in your wallet');
 
       const dnsFormat = toDNSWireFormat(`${name}.uq`);
-      const tx = await uqNft.register(
+      const tx = await dotUq.register(
         dnsFormat,
         accounts![0],
-        [ wsTx.data! ]
+        data
       )
 
       setLoading('Registering QNS ID...');
@@ -90,7 +91,7 @@ function RegisterUqName({
       setLoading('');
       alert('There was an error registering your uq-name, please try again.')
     }
-  }, [name, direct, accounts, uqNft, qns, navigate, setUqName, provider, openConnect, setNetworkingKey, setIpAddress, setPort, setRouters])
+  }, [name, direct, accounts, dotUq, qns, navigate, setUqName, provider, openConnect, setNetworkingKey, setIpAddress, setPort, setRouters])
 
   return (
     <>

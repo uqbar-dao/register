@@ -30,7 +30,7 @@ function Reset({
   setReset,
   uqName,
   setUqName,
-  uqNft,
+  dotUq,
   qns,
   openConnect,
   closeConnect,
@@ -87,7 +87,7 @@ function Reset({
 
           try {
 
-            const owner = await uqNft.ownerOf(hash(normalized))
+            const owner = await dotUq.ownerOf(hash(normalized))
 
             index = vets.indexOf(NAME_NOT_OWNER)
             if (owner === accounts![0] && index !== -1)
@@ -135,13 +135,16 @@ function Reset({
       setPort(port)
       setRouters(allowed_routers)
 
-      const tx = await qns.setWsRecord(
-        namehash(uqName),
-        networking_key,
-        direct ? ipAddress : 0,
-        direct ? port : 0,
-        direct ? [] : allowed_routers.map(x => namehash(x))
-      )
+      const data = [
+        direct 
+          ? ( await qns.populateTransaction.setRouters
+            (namehash(uqName), allowed_routers.map(x => namehash(x)))).data!
+          : ( await qns.populateTransaction.setAllIp
+              (namehash(uqName), ipAddress, port, 0, 0, 0)).data!,
+        ( await qns.populateTransaction.setKey(namehash(uqName), networking_key)).data!,
+      ];
+
+      const tx = await qns.multicall(data)
 
       setLoading("Resetting Networking Information...");
 
