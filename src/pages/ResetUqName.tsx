@@ -137,10 +137,10 @@ function Reset({
 
       const data = [
         direct 
-          ? ( await qns.populateTransaction.setRouters
-            (namehash(uqName), allowed_routers.map(x => namehash(x)))).data!
-          : ( await qns.populateTransaction.setAllIp
-              (namehash(uqName), ipAddress, port, 0, 0, 0)).data!,
+          ? ( await qns.populateTransaction.setAllIp
+              (namehash(uqName), ipAddress, port, 0, 0, 0)).data!
+          : ( await qns.populateTransaction.setRouters
+            (namehash(uqName), allowed_routers.map(x => namehash(x)))).data!,
         ( await qns.populateTransaction.setKey(namehash(uqName), networking_key)).data!,
       ];
 
