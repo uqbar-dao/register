@@ -36,7 +36,9 @@
   },
   "scripts": {
     "start": "react-scripts start",
-    "build": "react-scripts build",
+    "build": "GENERATE_SOURCEMAP=false react-scripts build",
+    "inline": "node ./add-inline-tags.js && cd build && inline-source ./index.html > ./inline-index.html && cd ..",
+    "build-inline": "npm run build && npm run inline",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
     "tc": "typechain --target ethers-v5 --out-dir src/abis/types/ \"./src/abis/**/*.json\""
@@ -60,6 +62,7 @@
     ]
   },
   "devDependencies": {
-    "@types/react-modal": "^3.16.2"
+    "@types/react-modal": "^3.16.2",
+    "inline-source-cli": "^2.0.0"
   }
 }
