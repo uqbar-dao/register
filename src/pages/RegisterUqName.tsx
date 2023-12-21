@@ -68,7 +68,7 @@ function RegisterUqName({
           ? ( await qns.populateTransaction.setAllIp
               ( utils.namehash(`${name}.uq`), ipAddress, port, 0, 0 , 0) ).data!
           : ( await qns.populateTransaction.setRouters
-              (utils.namehash(`${name}.uq`), allowed_routers.map(x => utils.namehash(x)))).data!,
+              ( utils.namehash(`${name}.uq`), allowed_routers.map(x => utils.namehash(x)))).data!,
         ( await qns.populateTransaction.setKey(utils.namehash(`${name}.uq`), networking_key)).data!
       ]
 

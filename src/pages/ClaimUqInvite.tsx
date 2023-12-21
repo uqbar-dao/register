@@ -4,7 +4,8 @@ import { Link, useNavigate } from "react-router-dom";
 import EnterUqName from "../components/EnterUqName";
 import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader"
-import { PageProps } from "../lib/types";
+import { NetworkingInfo, PageProps } from "../lib/types";
+import { ipToNumber } from "../utils/ipToNumber";
 
 global.Buffer = global.Buffer || require('buffer').Buffer;
 
@@ -15,7 +16,7 @@ const {
 
 interface ClaimUqNameProps extends PageProps { }
 
-function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, networkingKey, ipAddress, port, routers, closeConnect }: ClaimUqNameProps) {
+function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, setNetworkingKey, setIpAddress, setPort, setRouters, closeConnect }: ClaimUqNameProps) {
   const accounts = useAccounts();
   const provider = useProvider();
   const navigate = useNavigate();
@@ -54,6 +55,16 @@ function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, netwo
 
     if (!provider) return openConnect()
 
+    const { networking_key, ws_routing: [ip_address, port], allowed_routers } =
+      (await fetch('/generate-networking-info', { method: 'POST' }).then(res => res.json())) as NetworkingInfo
+    
+    const ipAddress = ipToNumber(ip_address)
+
+    setNetworkingKey(networking_key)
+    setIpAddress(ipAddress)
+    setPort(port)
+    setRouters(allowed_routers)
+
     if (nameValidities.length !== 0 || inviteValidity !== '') return
     if (!name || !invite) {
       window.alert('Please enter a name and invite code')
@@ -65,6 +76,8 @@ function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, netwo
     setLoaderMsg('...Building EIP-4337 User Operation')
     setIsLoading(true);
 
+    console.log("BUILDING", networking_key, ipAddress, port, allowed_routers);
+
     try {
       response = await fetch(
         process.env.REACT_APP_BUILD_USER_OP_POST!,
@@ -73,10 +86,10 @@ function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, netwo
           body: JSON.stringify({
             name: name+".uq",
             address: accounts![0],
-            networkingKey: networkingKey,
+            networkingKey: networking_key,
             wsIp: ipAddress,
             wsPort: port,
-            routers: routers,
+            routers: allowed_routers,
             direct: direct
           })
         }

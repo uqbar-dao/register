@@ -3,9 +3,9 @@ import { ChainId } from './chainId'
 type AddressMap = { [chainId: number]: string }
 
 export const QNS_REGISTRY_ADDRESSES : AddressMap = {
-    [ChainId.SEPOLIA]: '0x1C5595336Fd763a81887472D30D6CbD736Acf0E3',
+    [ChainId.SEPOLIA]: '0x4C8D8d4A71cE21B4A16dAbf4593cDF30d79728F1',
 }
 
 export const DOT_UQ_ADDRESSES : AddressMap = {
-    [ChainId.SEPOLIA]: '0xC0deB2E3F2500289c0898C0DF3BDFb6E7da22c1D'
+    [ChainId.SEPOLIA]: '0x9354E3b14A99a5Be5e2f0edB825681186C15BA62'
 }
