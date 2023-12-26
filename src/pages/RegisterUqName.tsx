@@ -8,6 +8,7 @@ import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader";
 import { NetworkingInfo, PageProps } from "../lib/types";
 import { ipToNumber } from "../utils/ipToNumber";
+import { setSepolia } from "../utils/chain";
 
 const {
   useAccounts,
@@ -64,7 +65,7 @@ function RegisterUqName({
       setRouters(allowed_routers)
 
       const data: BytesLike[] = [
-        direct 
+        direct
           ? ( await qns.populateTransaction.setAllIp
               ( utils.namehash(`${name}.uq`), ipAddress, port, 0, 0 , 0) ).data!
           : ( await qns.populateTransaction.setRouters
@@ -73,6 +74,13 @@ function RegisterUqName({
       ]
 
       setLoading('Please confirm the transaction in your wallet');
+
+      try {
+        await setSepolia();
+      } catch (error) {
+        window.alert("You must connect to the Sepolia network to continue. Please connect and try again.");
+        throw new Error('Sepolia not set')
+      }
 
       const dnsFormat = toDNSWireFormat(`${name}.uq`);
       const tx = await dotUq.register(
