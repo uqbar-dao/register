@@ -9,6 +9,7 @@ import Loader from "../components/Loader";
 import UqHeader from "../components/UqHeader";
 import { NetworkingInfo, PageProps } from "../lib/types";
 import { ipToNumber } from "../utils/ipToNumber";
+import { setSepolia } from "../utils/chain";
 
 const NAME_INVALID_PUNY = "Unsupported punycode character"
 const NAME_NOT_OWNER = "Name does not belong to this wallet"
@@ -136,13 +137,20 @@ function Reset({
       setRouters(allowed_routers)
 
       const data = [
-        direct 
+        direct
           ? ( await qns.populateTransaction.setAllIp
               (namehash(uqName), ipAddress, port, 0, 0, 0)).data!
           : ( await qns.populateTransaction.setRouters
             (namehash(uqName), allowed_routers.map(x => namehash(x)))).data!,
         ( await qns.populateTransaction.setKey(namehash(uqName), networking_key)).data!,
       ];
+
+      try {
+        await setSepolia();
+      } catch (error) {
+        window.alert("You must connect to the Sepolia network to continue. Please connect and try again.");
+        throw new Error('Sepolia not set')
+      }
 
       const tx = await qns.multicall(data)
 
