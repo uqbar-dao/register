@@ -19,6 +19,10 @@ function SetPassword({ uqName, direct, pw, reset, setPw, appSizeOnLoad, closeCon
   const [loading, setLoading] = useState<boolean>(false);
 
   useEffect(() => {
+    document.title = "Set Password"
+  }, [])
+
+  useEffect(() => {
     setError('')
   }, [pw, pw2])
 

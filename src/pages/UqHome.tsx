@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom"
 import UqHeader from "../components/UqHeader"
+import { useEffect } from "react"
 
 type UqHomeProps = {
     openConnect: () => void
@@ -19,6 +20,10 @@ function UqHome ({ openConnect, uqName, provider, closeConnect }: UqHomeProps) {
     const previouslyBooted = Boolean(uqName)
 
     const hasNetwork = Boolean(window.ethereum)
+
+    useEffect(() => {
+        document.title = "Welcome"
+    }, [])
 
     return (
         <>

@@ -38,6 +38,8 @@ function Login({
   const [restartFlow, setRestartFlow] = useState<boolean>(false);
 
   useEffect(() => {
+    document.title = "Login";
+
     (async () => {
       try {
         const infoData = (await fetch('/info', { method: 'GET' }).then(res => res.json())) as UnencryptedIdentity

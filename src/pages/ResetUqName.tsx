@@ -50,6 +50,10 @@ function Reset({
 
   const [ triggerNameCheck, setTriggerNameCheck ] = useState<boolean>(false)
 
+  useEffect(() => {
+    document.title = "Reset"
+  }, [])
+
   // so inputs will validate once wallet is connected
   useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 

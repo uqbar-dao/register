@@ -41,6 +41,10 @@ function RegisterUqName({
 
   const [triggerNameCheck, setTriggerNameCheck] = useState<boolean>(false)
 
+  useEffect(() => {
+    document.title = "Register"
+  }, [])
+
   useEffect(() => setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const enterUqNameProps = { name, setName, nameValidities, setNameValidities, dotUq, triggerNameCheck }

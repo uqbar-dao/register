@@ -36,6 +36,10 @@ function ImportKeyfile({
   const [pwDebounced, setPwDebounced] = useState<boolean>(false);
   const [loading, setLoading] = useState<boolean>(false);
 
+  useEffect(() => {
+    document.title = "Import Keyfile"
+  }, [])
+
   // const handlePassword = useCallback(async () => {
   //   try {
   //     const response = await fetch("/vet-keyfile", {
