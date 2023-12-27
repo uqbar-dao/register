@@ -29,6 +29,10 @@ function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, setNe
   const [name, setName] = useState('');
   const [nameValidities, setNameValidities] = useState<string[]>([])
 
+  useEffect(() => {
+    document.title = "Claim Invite"
+  }, [])
+
   useEffect(()=> setTriggerNameCheck(!triggerNameCheck), [provider]) // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
@@ -57,7 +61,7 @@ function ClaimUqInvite({ direct, setDirect, setUqName, dotUq, openConnect, setNe
 
     const { networking_key, ws_routing: [ip_address, port], allowed_routers } =
       (await fetch('/generate-networking-info', { method: 'POST' }).then(res => res.json())) as NetworkingInfo
-    
+
     const ipAddress = ipToNumber(ip_address)
 
     setNetworkingKey(networking_key)
