@@ -1,13 +1,11 @@
 import { useCallback } from 'react';
 import { hooks, metaMask } from "../connectors/metamask";
-import { Web3Provider } from "@ethersproject/providers";
-import { useWeb3React } from '@web3-react/core';
 import Modal from "react-modal"
 import { SEPOLIA_OPT_HEX, SEPOLIA_OPT_INT } from '../constants/chainId';
 
 const {
+  useChainId,
   useIsActivating,
-  useIsActive,
 } = hooks;
 
 type ConnectWalletProps = {
@@ -15,20 +13,8 @@ type ConnectWalletProps = {
   closeConnect: () => void
 }
 
-const customStyles = {
-  content: {
-    top: '50%',
-    left: '50%',
-    right: 'auto',
-    bottom: 'auto',
-    marginRight: '-50%',
-    transform: 'translate(-50%, -50%)',
-  },
-};
-
 export default function ConnectWallet({ connectOpen, closeConnect }: ConnectWalletProps) {
   const isActivating = useIsActivating();
-  const isActive = useIsActive();
 
   const connect = useCallback(async () => {
     closeConnect()

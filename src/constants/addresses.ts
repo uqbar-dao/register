@@ -1,6 +1,6 @@
 import { ChainId } from './chainId'
 
-type AddressMap = { [chainId: number]: string }
+type AddressMap = { [chainId: string]: string }
 
 export const QNS_REGISTRY_ADDRESSES : AddressMap = {
     [ChainId.SEPOLIA]: '0x4C8D8d4A71cE21B4A16dAbf4593cDF30d79728F1',
